@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FirstFew — risk-based vulnerability triage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#0a0c10;--panel:#11151c;--panel-2:#161b24;--line:#222a36;--line-soft:#1a212b;--txt:#dfe6f0;--txt-dim:#8893a4;--txt-faint:#5b6573;--p0:#ff3b53;--p1:#ff9a3c;--p2:#ffd23c;--p3:#3da6ff;--kev:#ff3b53;--accent:#37e0b0;--grid:rgba(120,140,170,0.045);}
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100vh;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:42px 42px;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  @keyframes fu{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+  .topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:12px 22px;background:rgba(10,12,16,.72);backdrop-filter:blur(9px);border-bottom:1px solid var(--line-soft);}
+  .tb-brand{font-family:'Space Mono',monospace;font-weight:700;letter-spacing:.02em;font-size:16px;display:flex;align-items:center;gap:9px;}
+  .tb-brand .ac,.modal h3 .ac{color:var(--accent);}
+  .modal h3{letter-spacing:.02em;}
+  .tb-brand .dot{width:8px;height:8px;border-radius:2px;background:var(--p0);box-shadow:0 0 10px var(--p0);animation:pulse 2.6s infinite;}
+  .tb-right{display:flex;gap:10px;align-items:center;}
+  button,label.btn{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;background:var(--panel-2);color:var(--txt);border:1px solid var(--line);padding:9px 14px;border-radius:7px;cursor:pointer;transition:.15s;text-transform:uppercase;}
+  button:hover,label.btn:hover{border-color:var(--accent);color:var(--accent);}
+  button.primary{background:var(--accent);color:#04140f;border-color:var(--accent);font-weight:600;}
+  button.primary:hover{filter:brightness(1.1);color:#04140f;}
+  input[type=file]{display:none;}
+  .langsw{display:inline-flex;border:1px solid var(--line);border-radius:20px;overflow:hidden;font-family:'IBM Plex Mono',monospace;font-size:11px;}
+  .langsw span{padding:8px 12px;cursor:pointer;color:var(--txt-faint);user-select:none;letter-spacing:.06em;}
+  .langsw span.on{background:var(--accent);color:#04140f;font-weight:600;}
+  .langsw span:hover:not(.on){color:var(--txt);}
+
+  /* HERO */
+  .hero{position:relative;min-height:90vh;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;padding:60px 22px;}
+  .dotfield{position:absolute;inset:0;z-index:0;}
+  .dotfield i{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--txt-faint);opacity:.22;}
+  .dotfield i.red{background:var(--p0);opacity:1;box-shadow:0 0 13px var(--p0);width:6px;height:6px;animation:pulse 2.6s infinite;}
+  .hero::after{content:"";position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse 60% 50% at 50% 45%,transparent 30%,var(--bg) 90%);}
+  .hero-inner{position:relative;z-index:2;max-width:900px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);margin-bottom:22px;opacity:0;animation:fu .6s .1s forwards;}
+  .hero h1{font-family:'Space Mono',monospace;font-weight:700;font-size:clamp(38px,7.4vw,84px);line-height:1.05;margin:0;letter-spacing:-.01em;}
+  .hero h1 .b1{display:block;opacity:0;animation:fu .6s .22s forwards;}
+  .hero h1 .b2{display:block;color:var(--accent);opacity:0;animation:fu .6s .36s forwards;}
+  .hero .sub{max-width:640px;margin:26px auto 0;font-size:clamp(15px,1.8vw,19px);color:var(--txt-dim);line-height:1.6;opacity:0;animation:fu .6s .52s forwards;}
+  .hero .cta{margin-top:34px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;opacity:0;animation:fu .6s .68s forwards;}
+  .hero .cta button{padding:14px 22px;font-size:13px;border-radius:9px;}
+  .scrollcue{position:absolute;bottom:22px;left:50%;color:var(--txt-faint);font-size:20px;z-index:2;animation:bob 1.8s infinite;}
+  @keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,8px)}}
+
+  /* STORY */
+  .story{max-width:1000px;margin:0 auto;padding:10px 22px;}
+  .block{padding:52px 0;border-top:1px solid var(--line-soft);opacity:0;transform:translateY(22px);transition:.7s ease;}
+  .block.in{opacity:1;transform:none;}
+  .block .eyebrow{animation:none;opacity:1;margin-bottom:14px;}
+  .block h2{font-family:'Space Mono',monospace;font-weight:700;font-size:clamp(26px,4vw,42px);margin:0 0 14px;line-height:1.1;}
+  .lead{font-size:clamp(15px,1.7vw,18px);color:var(--txt-dim);line-height:1.65;max-width:700px;margin:0;}
+  .lead b{color:var(--txt);}
+  .signals{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:30px;}
+  .sigcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;border-top:3px solid var(--accent);}
+  .sigcard:nth-child(1){border-top-color:var(--p0);}.sigcard:nth-child(2){border-top-color:var(--p1);}.sigcard:nth-child(3){border-top-color:var(--p3);}
+  .sigcard h3{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.05em;margin:0 0 9px;}
+  .sigcard p{margin:0;font-size:13px;color:var(--txt-dim);line-height:1.55;}
+  .mission,.privacy{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:30px 28px;}
+  .privacy{border-left:3px solid var(--accent);}
+  @media(max-width:760px){.signals{grid-template-columns:1fr;}}
+
+  /* APP */
+  .app{max-width:1180px;margin:20px auto 0;padding:0 22px 60px;scroll-margin-top:62px;}
+  .app-head{padding:44px 0 4px;border-top:1px solid var(--line-soft);}
+  .app-head h2{font-family:'Space Mono',monospace;font-size:clamp(22px,3vw,32px);margin:6px 0 0;}
+  .datanote{margin-top:16px;background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--p1);border-radius:9px;padding:11px 14px;font-size:12.5px;color:var(--txt-dim);line-height:1.55;}
+  .morebar{margin-top:14px;padding:14px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--txt-dim);border-top:1px dashed var(--line);}
+  .morebtn{margin-left:10px;background:var(--panel-2);color:var(--txt);border:1px solid var(--line);border-radius:7px;padding:7px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;}
+  .morebtn:hover{border-color:var(--accent);color:var(--accent);}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .rulebar{margin:22px 0 6px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:14px 18px;font-size:13px;color:var(--txt-dim);line-height:1.6;}
+  .rulebar b{color:var(--txt);} .rulebar .k{color:var(--kev);font-weight:600;}
+  .hint{margin-top:16px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--txt-faint);line-height:1.7;}
+  .hint b{color:var(--txt-dim);} .hint code{background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--accent);} .hint a{color:var(--accent);cursor:pointer;text-decoration:underline;}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:16px 0 22px;}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;position:relative;overflow:hidden;}
+  .kpi .v{font-family:'Space Mono',monospace;font-size:32px;font-weight:700;line-height:1;}
+  .kpi .l{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--txt-dim);margin-top:9px;}
+  .kpi .bar{position:absolute;left:0;top:0;bottom:0;width:4px;}
+  .kpi.k0 .bar{background:var(--p0);box-shadow:0 0 12px var(--p0);}.kpi.k0 .v{color:var(--p0);}
+  .kpi.kk .bar{background:var(--kev);}.kpi.kk .v{color:var(--kev);}
+  .kpi.ke .bar{background:var(--p1);}.kpi.ke .v{color:var(--p1);}
+  .kpi.kt .bar{background:var(--accent);}
+  .layout{display:grid;grid-template-columns:0.9fr 1.5fr;gap:18px;align-items:start;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;}
+  .panel h2{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--txt-dim);margin:0 0 14px;font-weight:500;}
+  .quad{width:100%;height:auto;display:block;}
+  .qlabel{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;fill:var(--txt-faint);text-transform:uppercase;}
+  .axis-t{font-family:'IBM Plex Mono',monospace;font-size:9.5px;fill:var(--txt-dim);}
+  .dotlbl{font-family:'IBM Plex Mono',monospace;font-size:8.5px;fill:var(--txt-faint);}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--txt-dim);}
+  .legend span{display:flex;align-items:center;gap:6px;} .sw{width:10px;height:10px;border-radius:3px;}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  select,input.search{font-family:'IBM Plex Mono',monospace;font-size:11.5px;background:var(--panel-2);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:7px 9px;}
+  input.search{flex:1;min-width:120px;}
+  .chip{font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:6px 10px;border:1px solid var(--line);border-radius:20px;cursor:pointer;color:var(--txt-dim);user-select:none;}
+  .chip.on{background:rgba(255,59,83,.12);border-color:var(--kev);color:var(--kev);}
+  .finding{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start;padding:14px 4px;border-bottom:1px solid var(--line-soft);}
+  .rank{font-family:'Space Mono',monospace;font-size:13px;color:var(--txt-faint);padding-top:2px;min-width:26px;}
+  .tier{font-family:'IBM Plex Mono',monospace;font-weight:700;padding:3px 9px;border-radius:6px;font-size:12px;letter-spacing:.05em;}
+  .t-P0{background:rgba(255,59,83,.16);color:var(--p0);}.t-P1{background:rgba(255,154,60,.15);color:var(--p1);}.t-P2{background:rgba(255,210,60,.13);color:var(--p2);}.t-P3{background:rgba(61,166,255,.13);color:var(--p3);}
+  .fhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;}
+  .cve{color:var(--txt);font-weight:500;font-size:13.5px;}
+  .cve.clickable{cursor:pointer;}.cve.clickable:hover{color:var(--accent);}
+  .kevtag{font-size:9px;letter-spacing:.08em;color:var(--kev);border:1px solid var(--kev);border-radius:4px;padding:1px 5px;}
+  .asset{font-size:11px;color:var(--txt-faint);}
+  .verdict{margin:7px 0 9px;font-size:13px;color:var(--txt);line-height:1.5;}
+  .meters{display:flex;flex-direction:column;gap:5px;}
+  .mrow{display:grid;grid-template-columns:84px 64px 1fr;gap:9px;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:11px;}
+  .mlabel{color:var(--txt-faint);text-transform:uppercase;letter-spacing:.08em;font-size:9.5px;}
+  .mword{font-weight:700;font-size:10.5px;letter-spacing:.05em;text-align:center;border-radius:4px;padding:2px 0;}
+  .w-hi{background:rgba(255,59,83,.14);color:var(--p0);}.w-md{background:rgba(255,210,60,.13);color:var(--p2);}.w-lo{background:rgba(61,166,255,.12);color:var(--p3);}
+  .mfactors{color:var(--txt-dim);} .mfactors .up{color:var(--p1);}.mfactors .down{color:var(--p3);}
+  .fscore{text-align:right;font-family:'Space Mono',monospace;min-width:54px;}
+  .slbl{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-faint);margin-bottom:3px;}
+  .sval{font-size:22px;font-weight:700;}
+  .ssla{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--txt-faint);text-transform:uppercase;letter-spacing:.06em;margin-top:3px;}
+  .detail{display:none;margin-top:11px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;}
+  .dsigs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .dsig{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:2px 7px;color:var(--txt-dim);font-size:10px;}
+  .dformula{color:var(--txt-dim);line-height:1.85;margin-bottom:10px;} .dformula b{color:var(--txt);}
+  .dlinks{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:9px;}
+  .dlinks a{color:var(--accent);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:5px 9px;font-size:10.5px;}
+  .dlinks a:hover{border-color:var(--accent);}
+  .dnote{color:var(--txt-faint);font-family:'IBM Plex Sans',sans-serif;font-size:11px;line-height:1.5;}
+  footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--txt-faint);line-height:1.7;} footer a{color:var(--accent);text-decoration:none;}
+
+  .modal-back{position:fixed;inset:0;background:rgba(5,7,10,.8);backdrop-filter:blur(3px);z-index:60;display:none;align-items:center;justify-content:center;padding:24px;}
+  .modal-back.show{display:flex;animation:fade .25s ease;} @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;max-width:640px;width:100%;max-height:88vh;overflow:auto;padding:30px 30px 26px;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.6);}
+  .modal h3{font-family:'Space Mono',monospace;font-size:22px;letter-spacing:.06em;margin:0 0 3px;display:flex;align-items:center;gap:11px;}
+  .modal h3 .dot{width:10px;height:10px;border-radius:2px;background:var(--p0);box-shadow:0 0 12px var(--p0);}
+  .modal .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--txt-faint);text-transform:uppercase;letter-spacing:.12em;margin-bottom:22px;}
+  .msec{margin-bottom:17px;}
+  .msec h4{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 7px;}
+  .msec p{margin:0;font-size:13.5px;color:var(--txt-dim);line-height:1.65;} .msec p b{color:var(--txt);}
+  .priv{background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:15px 17px;}
+  .modal .go{margin-top:10px;}
+  .mclose{position:absolute;top:15px;right:17px;background:none;border:none;color:var(--txt-faint);font-size:18px;cursor:pointer;padding:4px 8px;text-transform:none;} .mclose:hover{color:var(--txt);border:none;}
+  @media(max-width:900px){.layout{grid-template-columns:1fr;}.kpis{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="tb-brand"><span class="dot"></span>First<span class="ac">Few</span></div>
+  <div class="tb-right"><button id="tbHow" onclick="openAbout()"></button><div class="langsw"><span data-l="it" onclick="setLang('it')">IT</span><span data-l="en" onclick="setLang('en')">EN</span></div></div>
+</div>
+
+<section class="hero">
+  <div class="dotfield" id="dotfield"></div>
+  <div class="hero-inner">
+    <div class="eyebrow" id="heroEyebrow"></div>
+    <h1><span class="b1" id="heroH1"></span><span class="b2" id="heroH1b"></span></h1>
+    <p class="sub" id="heroSub"></p>
+    <div class="cta"><button class="primary" id="heroCta1" onclick="goApp()"></button><button id="heroCta2" onclick="openAbout()"></button></div>
+  </div>
+  <div class="scrollcue">↓</div>
+</section>
+
+<div class="story">
+  <div class="block" id="blk1">
+    <div class="eyebrow" id="shiftEyebrow"></div>
+    <h2 id="shiftH"></h2>
+    <p class="lead" id="shiftP"></p>
+    <div class="signals">
+      <div class="sigcard"><h3 id="s1t"></h3><p id="s1d"></p></div>
+      <div class="sigcard"><h3 id="s2t"></h3><p id="s2d"></p></div>
+      <div class="sigcard"><h3 id="s3t"></h3><p id="s3d"></p></div>
+    </div>
+  </div>
+  <div class="block" id="blk2"><div class="mission"><h2 id="missionH"></h2><p class="lead" id="missionP" style="margin-top:12px"></p></div></div>
+  <div class="block" id="blk3"><div class="privacy"><div class="eyebrow" style="color:var(--accent);margin-bottom:10px">PRIVACY</div><h2 id="privH"></h2><p class="lead" id="privP" style="margin-top:12px"></p></div></div>
+</div>
+
+<section class="app" id="app">
+  <div class="app-head">
+    <div class="eyebrow" id="appEyebrow" style="opacity:1;animation:none"></div>
+    <h2 id="appH"></h2>
+  </div>
+  <div class="datanote" id="dataNote"></div>
+  <div class="controls" style="margin-top:22px">
+    <button class="primary" id="btnDemo" onclick="loadDemo()"></button>
+    <label class="btn" id="btnUpload" for="csv"></label>
+    <input type="file" id="csv" accept=".csv" onchange="loadCSV(event)" />
+    <button id="btnTemplate" onclick="downloadTemplate()"></button>
+  </div>
+  <div class="rulebar" id="rulebar"></div>
+  <div class="hint" id="hint"></div>
+  <div class="kpis" id="kpis"></div>
+  <div class="layout">
+    <div class="panel"><h2 id="chartTitle"></h2><div id="chart"></div><div class="legend" id="legend"></div></div>
+    <div class="panel"><h2 id="listTitle"></h2><div class="filters"><input class="search" id="q" oninput="render()" /><select id="fzone" onchange="render()"></select><span class="chip" id="kevchip" onclick="toggleKev()"></span></div><div id="list"></div></div>
+  </div>
+  <footer id="footer"></footer>
+</section>
+
+<div class="modal-back" id="about" onclick="if(event.target===this)closeAbout()">
+  <div class="modal">
+    <button class="mclose" onclick="closeAbout()">✕</button>
+    <h3><span class="dot"></span>First<span class="ac">Few</span></h3>
+    <div class="sub" id="mSub"></div>
+    <div class="msec"><h4 id="mH1"></h4><p id="mP1"></p></div>
+    <div class="msec"><h4 id="mH2"></h4><p id="mP2"></p></div>
+    <div class="msec priv"><h4 id="mH3"></h4><p id="mP3"></p></div>
+    <button class="primary go" id="mGo" onclick="closeAbout()"></button>
+  </div>
+</div>
+
+<script>
+const I18N={
+ en:{
+  hero_eyebrow:`Risk-based vulnerability triage`,
+  hero_h1:`Stop drowning in findings.`, hero_h1b:`Fix the twelve that matter.`,
+  hero_sub:`AI made finding vulnerabilities almost free — fixing them didn't get any easier. FirstFew ranks your scanner output by real-world risk and tells you, in plain language, what to do first.`,
+  hero_cta1:`See it live →`, hero_cta2:`ⓘ How it works`,
+  shift_eyebrow:`The shift`, shift_h:`Severity is not priority.`,
+  shift_p:`CVSS tells you how bad a flaw <i>could</i> be. It says nothing about whether it's being exploited, whether an attacker can reach it, or whether the asset even matters to you. FirstFew weighs all three — so a router on the KEV list outranks a CVSS 9.9 sitting on an isolated lab box.`,
+  s1_t:`① Exploited now`, s1_d:`CISA KEV — if attackers are using it today, it goes straight to the top. No debate.`,
+  s2_t:`② Likely soon`, s2_d:`EPSS — the probability it gets exploited, so you move before it's a headline.`,
+  s3_t:`③ Your reality`, s3_d:`Exposure, attack vector and asset value — can they actually reach it, and would it hurt if they did?`,
+  mission_h:`The same clarity — for everyone.`,
+  mission_p:`Finding vulnerabilities became almost free, so everyone now faces the same flood — a solo maintainer, a startup, the SOC team at a global bank. The hard part was never finding them; it's deciding what to fix first. FirstFew puts that decision within reach of anyone, the same way: <b>free, open, and built to be verified.</b>`,
+  priv_h:`Your data never leaves your browser.`,
+  priv_p:`No server. No account. Nothing logged. FirstFew is fully static and open source — open your DevTools and watch it send nothing, anywhere. <b>Don't trust it. Verify it.</b>`,
+  app_eyebrow:`Live · demo data loaded`, app_h:`Try it — click any CVE for the full reasoning.`, data_note:`These sample findings use real CVEs with real values — nothing made up. For each one, the CVSS, KEV status and EPSS are the CVE's actual data (EPSS is the real FIRST score as of 1 Jun 2026 — open a finding's links to check). Only the asset, zone and criticality are an example scenario, since those describe your environment, not the CVE. Upload your own CSV and the live feed fills CVSS, EPSS and KEV in for you, refreshed daily.`, showing:`Showing the top {n} by priority — {m} findings in total.`, show_more:`Show more`, chart_density:`{m} findings · density map + top 250 plotted`,
+  how:`ⓘ How it works`, demo:`Reload demo data`, upload:`Upload CSV`, template:`Download template ↓`,
+  rule:`<b>How priority is decided.</b> <span class="k">On CISA KEV (exploited right now) → always P0</span>, wherever it sits. Otherwise: <b>Likelihood</b> (EPSS × can an attacker actually <i>reach</i> it: exposure + attack vector) × <b>Impact</b> (how much the asset matters — core network gear counts as high even when internal, because compromising it breaks your segmentation).`,
+  hint:`<b>CSV format:</b> <code>cve</code> required · your context: <code>asset</code>, <code>zone</code> (internet/dmz/internal/management), <code>criticality</code> (crown/important/normal/low), <code>type</code> (server/network-core/appliance), <code>av</code> (N/A/L/P) · auto-enriched later by the feed pipeline: <code>cvss</code>, <code>epss</code>, <code>kev</code>. <a onclick="downloadTemplate()">grab the template ↓</a>`,
+  footer:`Built by <b style="color:var(--txt)">[your name]</b> · open source · data: CISA KEV (CC0), FIRST EPSS, NVD · <a href="#" onclick="return false;">github.com/you/firstfew</a>`,
+  kpi_total:`total findings`, kpi_p0:`P0 · act now`, kpi_kev:`on CISA KEV`, kpi_exposed:`exposed &amp; high-risk`,
+  chart_title:`Likelihood × Impact`, list_title:`Prioritized findings — why each one ranks where it does`,
+  leg_p0:`P0 act now`, leg_p1:`P1`, leg_p2:`P2`, leg_p3:`P3 monitor`, leg_kev:`white ring = on KEV`,
+  search_ph:`filter CVE / asset…`, kev_only:`KEV only`,
+  zone_all:`all zones`, zone_internet:`internet-facing`, zone_dmz:`dmz`, zone_internal:`internal`, zone_management:`management`,
+  ax_like:`likelihood →`, ax_imp:`impact →`, ax_act:`ACT NOW`,
+  lab_like:`Likelihood`, lab_imp:`Impact`, word_hi:`HIGH`, word_md:`MED`, word_lo:`LOW`, score_lbl:`score /100`,
+  no_match:`no findings match the filter`,
+  alert_norows:`No rows found. The file needs a "cve" column — use "Download template" for the exact format.`,
+  exp:{internet:`internet-facing`,dmz:`in DMZ`,internal:`internal-only`,management:`mgmt-plane only`},
+  av:{N:`network-exploitable`,A:`needs adjacent access`,L:`needs local access`,P:`needs physical access`},
+  crit:{crown:`crown-jewel asset`,important:`important asset`,normal:`standard asset`,low:`low-value asset`},
+  coreinfra:`core network gear (blast radius)`,
+  v_kev:`Exploited in the wild (CISA KEV) — patch now regardless of CVSS or where it sits.`,
+  v_core:`Internal core device: low chance of a <i>direct</i> hit, but compromising it breaks your segmentation — kept high on impact, not on probability.`,
+  v_exposed:`Reachable from outside and plausibly exploitable — this beats higher-CVSS internal findings.`,
+  v_local:`Severe on paper, but it needs local/adjacent access on a segmented plane — practical reachability is low, so it ranks below its CVSS.`,
+  v_low:`Scary CVSS, but an isolated low-value box with no real-world exploitation — modest actual risk.`,
+  v_exp2:`Exposed asset — worth attention even without confirmed exploitation.`,
+  v_routine:`Routine internal finding — schedule with normal remediation.`,
+  d_onkev:`on KEV`, d_notkev:`not on KEV`, d_like:`Likelihood`, d_imp:`Impact`, d_score:`Score`, d_kevover:`KEV override`,
+  fx_exposure:`exposure`, fx_criticality:`criticality`,
+  d_l_nvd:`NVD detail`, d_l_cve:`CVE.org`, d_l_kev:`CISA KEV catalog`, d_l_adv:`Vendor advisory / patch`,
+  d_note:`Full description, references and patched versions live on the pages above. Once the feed pipeline is live, the CVE description + CISA required-action + fixed version will appear inline here too.`,
+  m_sub:`risk-based vulnerability triage`,
+  m_h1:`How priority is decided`, m_p1:`<b>If a CVE is on CISA's KEV list — proof it's being exploited in the wild — it's P0, full stop</b>, wherever it sits and whatever its CVSS. Everything else is scored as <b>Likelihood × Impact</b>.<br><br><b>Likelihood</b> = EPSS × attack vector × exposure. Attack vector weights network 1.0 · adjacent 0.55 · local 0.35 · physical 0.15; exposure weights internet 1.0 · DMZ 0.8 · internal 0.5 · management 0.2. It answers one thing: can an attacker realistically reach this?<br><br><b>Impact</b> = asset criticality × CVSS/10, where criticality runs crown 1.0 · important 0.7 · normal 0.45 · low 0.2 — and core network gear (routers, switches, firewalls) is floored at 0.85 even when internal, because owning it breaks your segmentation.<br><br>The result sorts into <b>P0 ≥ 0.45 · P1 ≥ 0.22 · P2 ≥ 0.08 · P3</b>, with response targets P0 ≤ 72h · P1 ≤ 2 weeks · P2 ≤ 90 days. Every finding in the list shows its own arithmetic — nothing is hidden.`,
+  m_h2:`What you feed it`, m_p2:`FirstFew reads a CSV. The only required column is <code>cve</code> — everything else is <i>your</i> context: <code>asset</code>, <code>zone</code> (internet / dmz / internal / management), <code>criticality</code> (crown / important / normal / low) and <code>type</code> (server / network-core / appliance / endpoint).<br><br>The risk data — <b>CVSS</b>, <b>EPSS</b> and <b>KEV</b> status — you don't maintain by hand: it's pulled from the authoritative feeds and refreshed daily. Sources: <b>CISA KEV</b> (CC0), <b>FIRST EPSS</b>, <b>NVD</b>.`,
+  m_h3:`Your data stays yours`, m_p3:`<b>Everything runs in your browser.</b> Your scan data is read locally and never uploaded — no server, no database, no account, nothing logged. Close the tab and it's gone.<br><br>Don't take our word for it: FirstFew is <b>open source</b> and fully static. Open DevTools → Network and you'll see the page sends none of your data anywhere. Any future AI-assisted features stay opt-in and use your own API key.`,
+  m_go:`Start triaging →`
+ },
+ it:{
+  hero_eyebrow:`Triage delle vulnerabilità basato sul rischio`,
+  hero_h1:`Smetti di annegare nei finding.`, hero_h1b:`Sistema i pochi che contano.`,
+  hero_sub:`L'AI ha reso quasi gratis trovare le vulnerabilità — correggerle non è diventato più facile. FirstFew ordina l'output dei tuoi scanner per rischio reale e ti dice, in parole semplici, cosa fare prima.`,
+  hero_cta1:`Provalo dal vivo →`, hero_cta2:`ⓘ Come funziona`,
+  shift_eyebrow:`Il cambio`, shift_h:`Gravità non è priorità.`,
+  shift_p:`Il CVSS ti dice quanto <i>potrebbe</i> essere grave una falla. Non dice se è sfruttata, se un attaccante può raggiungerla, o se quell'asset conta per te. FirstFew pesa tutti e tre — così un router in lista KEV batte un CVSS 9.9 su un box di lab isolato.`,
+  s1_t:`① Sfruttata ora`, s1_d:`CISA KEV — se gli attaccanti la usano oggi, va dritta in cima. Senza discussioni.`,
+  s2_t:`② Probabile a breve`, s2_d:`EPSS — la probabilità che venga sfruttata, per muoverti prima che faccia notizia.`,
+  s3_t:`③ La tua realtà`, s3_d:`Esposizione, attack vector e valore dell'asset — può davvero raggiungerlo, e farebbe male se ci riuscisse?`,
+  mission_h:`La stessa chiarezza — per tutti.`,
+  mission_p:`Trovare le vulnerabilità è diventato quasi gratis, così oggi la stessa piena travolge tutti — il singolo manutentore, la startup, il SOC di una grande banca. La parte difficile non è mai stata trovarle: è decidere cosa correggere prima. FirstFew mette quella decisione alla portata di chiunque, allo stesso modo: <b>gratuito, aperto e fatto per essere verificato.</b>`,
+  priv_h:`I tuoi dati non lasciano mai il browser.`,
+  priv_p:`Niente server. Niente account. Niente log. FirstFew è completamente statico e open source — apri i DevTools e guarda: non invia nulla, da nessuna parte. <b>Non fidarti. Verifica.</b>`,
+  app_eyebrow:`Live · dati demo caricati`, app_h:`Provalo — clicca una CVE per il ragionamento completo.`, data_note:`Questi finding di esempio usano CVE reali con valori reali — niente di inventato. Per ognuna, CVSS, stato KEV ed EPSS sono i dati effettivi della CVE (l'EPSS è il valore reale FIRST al 1 giu 2026 — apri i link di un finding per verificare). Solo asset, zona e criticità sono uno scenario d'esempio, perché descrivono il tuo ambiente, non la CVE. Quando carichi il tuo CSV, la pipeline live riempie da sola CVSS, EPSS e KEV, aggiornati ogni giorno.`, showing:`Mostro i primi {n} per priorità — {m} finding in totale.`, show_more:`Mostra altri`, chart_density:`{m} finding · mappa di densità + primi 250`,
+  how:`ⓘ Come funziona`, demo:`Ricarica dati demo`, upload:`Carica CSV`, template:`Scarica template ↓`,
+  rule:`<b>Come si decide la priorità.</b> <span class="k">In CISA KEV (sfruttata proprio ora) → sempre P0</span>, ovunque si trovi. Altrimenti: <b>Probabilità</b> (EPSS × un attaccante può davvero <i>raggiungerla</i>: esposizione + attack vector) × <b>Impatto</b> (quanto conta l'asset — l'infra di rete core vale alto anche se interna, perché comprometterla rompe la segmentazione).`,
+  hint:`<b>Formato CSV:</b> <code>cve</code> obbligatoria · il tuo contesto: <code>asset</code>, <code>zone</code> (internet/dmz/internal/management), <code>criticality</code> (crown/important/normal/low), <code>type</code> (server/network-core/appliance), <code>av</code> (N/A/L/P) · arricchiti dopo dalla pipeline: <code>cvss</code>, <code>epss</code>, <code>kev</code>. <a onclick="downloadTemplate()">scarica il template ↓</a>`,
+  footer:`Creato da <b style="color:var(--txt)">[il tuo nome]</b> · open source · dati: CISA KEV (CC0), FIRST EPSS, NVD · <a href="#" onclick="return false;">github.com/you/firstfew</a>`,
+  kpi_total:`finding totali`, kpi_p0:`P0 · agisci ora`, kpi_kev:`in CISA KEV`, kpi_exposed:`esposti e ad alto rischio`,
+  chart_title:`Probabilità × Impatto`, list_title:`Finding prioritizzati — perché ognuno sta dov'è`,
+  leg_p0:`P0 agisci ora`, leg_p1:`P1`, leg_p2:`P2`, leg_p3:`P3 monitora`, leg_kev:`anello bianco = in KEV`,
+  search_ph:`filtra CVE / asset…`, kev_only:`solo KEV`,
+  zone_all:`tutte le zone`, zone_internet:`esposto internet`, zone_dmz:`dmz`, zone_internal:`interno`, zone_management:`management`,
+  ax_like:`probabilità →`, ax_imp:`impatto →`, ax_act:`AGISCI ORA`,
+  lab_like:`Probabilità`, lab_imp:`Impatto`, word_hi:`ALTO`, word_md:`MEDIO`, word_lo:`BASSO`, score_lbl:`punteggio /100`,
+  no_match:`nessun finding corrisponde al filtro`,
+  alert_norows:`Nessuna riga trovata. Il file deve avere una colonna "cve" — usa "Scarica template" per il formato esatto.`,
+  exp:{internet:`esposto su internet`,dmz:`in DMZ`,internal:`solo interno`,management:`solo piano mgmt`},
+  av:{N:`sfruttabile via rete`,A:`richiede accesso adiacente`,L:`richiede accesso locale`,P:`richiede accesso fisico`},
+  crit:{crown:`asset critico (crown jewel)`,important:`asset importante`,normal:`asset standard`,low:`asset di basso valore`},
+  coreinfra:`infra di rete core (blast radius)`,
+  v_kev:`Sfruttata in the wild (CISA KEV) — applica la patch ora, a prescindere da CVSS o posizione.`,
+  v_core:`Apparato core interno: bassa probabilità di colpo <i>diretto</i>, ma comprometterlo rompe la segmentazione — tenuto alto per impatto, non per probabilità.`,
+  v_exposed:`Raggiungibile da fuori e plausibilmente sfruttabile — batte finding interni con CVSS più alto.`,
+  v_local:`Grave sulla carta, ma richiede accesso locale/adiacente su un piano segmentato — raggiungibilità pratica bassa, quindi sotto il suo CVSS.`,
+  v_low:`CVSS spaventoso, ma box isolato di basso valore senza sfruttamento reale — rischio effettivo modesto.`,
+  v_exp2:`Asset esposto — merita attenzione anche senza sfruttamento confermato.`,
+  v_routine:`Finding interno di routine — pianifica con la remediation normale.`,
+  d_onkev:`in KEV`, d_notkev:`non in KEV`, d_like:`Probabilità`, d_imp:`Impatto`, d_score:`Punteggio`, d_kevover:`override KEV`,
+  fx_exposure:`esposizione`, fx_criticality:`criticità`,
+  d_l_nvd:`Dettaglio NVD`, d_l_cve:`CVE.org`, d_l_kev:`Catalogo CISA KEV`, d_l_adv:`Advisory / patch del vendor`,
+  d_note:`Descrizione completa, riferimenti e versioni corrette stanno nelle pagine qui sopra. Quando la pipeline dei feed sarà attiva, qui compariranno inline anche descrizione CVE + azione richiesta CISA + versione corretta.`,
+  m_sub:`triage delle vulnerabilità basato sul rischio`,
+  m_h1:`Come si decide la priorità`, m_p1:`<b>Se una CVE è nella lista CISA KEV — prova che è sfruttata in the wild — è P0, punto</b>, ovunque si trovi e qualunque sia il suo CVSS. Tutto il resto vale <b>Probabilità × Impatto</b>.<br><br><b>Probabilità</b> = EPSS × attack vector × esposizione. L'attack vector pesa network 1.0 · adjacent 0.55 · local 0.35 · physical 0.15; l'esposizione pesa internet 1.0 · DMZ 0.8 · interno 0.5 · management 0.2. Risponde a una sola cosa: un attaccante può davvero raggiungerla?<br><br><b>Impatto</b> = criticità dell'asset × CVSS/10, dove la criticità va crown 1.0 · important 0.7 · normal 0.45 · low 0.2 — e l'infrastruttura di rete core (router, switch, firewall) ha un minimo di 0.85 anche se interna, perché controllarla rompe la segmentazione.<br><br>Il risultato si ordina in <b>P0 ≥ 0.45 · P1 ≥ 0.22 · P2 ≥ 0.08 · P3</b>, con tempi di intervento P0 ≤ 72h · P1 ≤ 2 settimane · P2 ≤ 90 giorni. Ogni voce della lista mostra il proprio calcolo — niente è nascosto.`,
+  m_h2:`Cosa gli dai`, m_p2:`FirstFew legge un CSV. L'unica colonna obbligatoria è <code>cve</code> — tutto il resto è il <i>tuo</i> contesto: <code>asset</code>, <code>zone</code> (internet / dmz / internal / management), <code>criticality</code> (crown / important / normal / low) e <code>type</code> (server / network-core / appliance / endpoint).<br><br>I dati di rischio — <b>CVSS</b>, <b>EPSS</b> e stato <b>KEV</b> — non li mantieni a mano: arrivano dai feed autorevoli e si aggiornano ogni giorno. Fonti: <b>CISA KEV</b> (CC0), <b>FIRST EPSS</b>, <b>NVD</b>.`,
+  m_h3:`I tuoi dati restano tuoi`, m_p3:`<b>Tutto gira nel tuo browser.</b> I dati delle scansioni sono letti localmente e mai caricati — niente server, niente database, niente account, niente log. Chiudi la scheda e sono spariti.<br><br>Non fidarti sulla parola: FirstFew è <b>open source</b> e completamente statico. Apri DevTools → Network e vedrai che la pagina non invia nulla da nessuna parte. Eventuali funzioni AI future restano opt-in e usano la tua chiave API.`,
+  m_go:`Inizia il triage →`
+ }
+};
+let LANG='en';
+const T=()=>I18N[LANG];
+const byId=id=>document.getElementById(id);
+
+const W={exposure:{internet:1.00,dmz:0.80,internal:0.50,management:0.20},attackVector:{N:1.00,A:0.55,L:0.35,P:0.15},criticality:{crown:1.00,important:0.70,normal:0.45,low:0.20},coreInfraBlastFloor:0.85,kevFloor:0.90,tiers:{P0:0.45,P1:0.22,P2:0.08}};
+function score(f){const epss=(f.epss==null?0.02:f.epss),cvss=(f.cvss==null?5:f.cvss)/10,av=W.attackVector[f.av||'N']??1,exp=W.exposure[f.zone]??0.5,crit=W.criticality[f.criticality||'normal']??0.45,coreInfra=f.type==='network-core';
+  const likelihood=epss*av*exp,impactBase=Math.max(crit,coreInfra?W.coreInfraBlastFloor:0),impact=impactBase*cvss;let s=likelihood*impact;if(f.kev)s=Math.max(s,W.kevFloor);
+  let tier='P3';if(f.kev||s>=W.tiers.P0)tier='P0';else if(s>=W.tiers.P1)tier='P1';else if(s>=W.tiers.P2)tier='P2';
+  return {...f,_s:s,_likelihood:likelihood,_impact:impact,_tier:tier,_av:av,_exp:exp,_crit:crit,_coreInfra:coreInfra,_epss:epss};}
+const SLA={P0:'≤ 72h',P1:'≤ 2w',P2:'≤ 90d',P3:'—'};
+const DEMO=[
+ {cve:'CVE-2024-3400',asset:'edge-fw-01',type:'appliance',zone:'internet',criticality:'crown',cvss:10.0,epss:0.943,kev:true,av:'N'},
+ {cve:'CVE-2023-20198',asset:'core-rtr-01',type:'network-core',zone:'internal',criticality:'crown',cvss:10.0,epss:0.940,kev:true,av:'N'},
+ {cve:'CVE-2021-44228',asset:'app-java-01',type:'server',zone:'internet',criticality:'important',cvss:10.0,epss:0.944,kev:true,av:'N'},
+ {cve:'CVE-2023-4966',asset:'netscaler-01',type:'appliance',zone:'internet',criticality:'crown',cvss:9.4,epss:0.943,kev:true,av:'N'},
+ {cve:'CVE-2017-0144',asset:'file-srv-08',type:'server',zone:'internal',criticality:'important',cvss:8.1,epss:0.943,kev:true,av:'N'},
+ {cve:'CVE-2025-31324',asset:'sap-erp-01',type:'server',zone:'internal',criticality:'crown',cvss:10.0,epss:0.315,kev:true,av:'N'},
+ {cve:'CVE-2014-0160',asset:'legacy-web-03',type:'server',zone:'dmz',criticality:'normal',cvss:7.5,epss:0.945,kev:false,av:'N'},
+ {cve:'CVE-2016-5195',asset:'host-rhel-19',type:'server',zone:'internal',criticality:'important',cvss:7.8,epss:0.939,kev:false,av:'L'},
+ {cve:'CVE-2023-38545',asset:'build-agent-04',type:'server',zone:'internal',criticality:'low',cvss:9.8,epss:0.267,kev:false,av:'N'},
+ {cve:'CVE-2022-3602',asset:'api-node-09',type:'server',zone:'internal',criticality:'normal',cvss:7.5,epss:0.835,kev:false,av:'N'},
+ {cve:'CVE-2025-21001',asset:'mobile-fleet-12',type:'endpoint',zone:'management',criticality:'low',cvss:6.2,epss:0.0007,kev:false,av:'L'}
+];
+let DATA=[],kevOnly=false,VIEW=[],SHOWN=0;const PAGE=150;
+function loadDemo(){DATA=DEMO.map(score);kevOnly=false;syncKevChip();render();}
+function loadCSV(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{const rows=parseCSV(e.target.result).map(score);if(!rows.length){alert(T().alert_norows);return;}DATA=rows;render();};r.readAsText(f);}
+function downloadTemplate(){const csv=['cve,asset,type,zone,criticality,cvss,epss,kev,av','CVE-2024-3400,edge-fw-01,appliance,internet,crown,10.0,0.94,true,N','CVE-2023-38545,build-agent-04,server,internal,low,9.8,0.04,false,N','CVE-2025-21001,mobile-fleet-12,endpoint,management,low,6.2,0.01,false,L'].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='firstfew-template.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
+function parseCSV(txt){const L=txt.trim().split(/\r?\n/),h=L[0].split(',').map(x=>x.trim().toLowerCase()),idx=n=>h.indexOf(n),o=[];
+  for(let i=1;i<L.length;i++){const c=L[i].split(',').map(x=>x.trim());if(!c[0]||c[0].startsWith('#'))continue;const g=n=>{const j=idx(n);return j>=0?c[j]:undefined;},num=v=>(v==null||v==='')?null:parseFloat(v);
+    o.push({cve:g('cve')||c[0],asset:g('asset')||'—',type:(g('type')||'server'),zone:(g('zone')||'internal').toLowerCase(),criticality:(g('criticality')||'normal').toLowerCase(),cvss:num(g('cvss')),epss:num(g('epss')),kev:/^(1|true|yes|y)$/i.test(g('kev')||''),av:(g('av')||'N').toUpperCase().slice(0,1)});}
+  return o;}
+function toggleKev(){kevOnly=!kevOnly;syncKevChip();render();}
+function syncKevChip(){byId('kevchip').classList.toggle('on',kevOnly);}
+function filtered(){const q=(byId('q').value||'').toLowerCase(),z=byId('fzone').value;
+  return DATA.filter(f=>{if(kevOnly&&!f.kev)return false;if(z&&f.zone!==z)return false;if(q&&!(f.cve.toLowerCase().includes(q)||f.asset.toLowerCase().includes(q)))return false;return true;});}
+const lvl=(v,hi,md)=>v>=hi?['hi','w-hi']:v>=md?['md','w-md']:['lo','w-lo'];
+function likeFactors(f){const t=T(),up=f.zone==='internet'||f.zone==='dmz',expCls=up?'up':((f.zone==='internal'||f.zone==='management')?'down':''),avCls=(f.av==='L'||f.av==='A'||f.av==='P')?'down':'';
+  return `EPSS ${(f._epss*100).toFixed(0)}% · <span class="${expCls}">${t.exp[f.zone]||f.zone}</span> · <span class="${avCls}">${t.av[f.av]||f.av}</span>`;}
+function impFactors(f){const t=T();let s=`<span class="${f.criticality==='crown'?'up':(f.criticality==='low'?'down':'')}">${t.crit[f.criticality]||f.criticality}</span>`;if(f._coreInfra)s+=` · <span class="up">${t.coreinfra}</span>`;return s;}
+function verdict(f){const t=T();
+  if(f.kev)return t.v_kev;
+  if(f._coreInfra&&f._exp<0.3)return t.v_core;
+  if((f.zone==='internet'||f.zone==='dmz')&&f._likelihood>=0.2)return t.v_exposed;
+  if((f.av==='L'||f.av==='A')&&f._exp<0.3)return t.v_local;
+  if(f.criticality==='low'&&f._epss<0.05)return t.v_low;
+  if(f.zone==='internet'||f.zone==='dmz')return t.v_exp2;
+  return t.v_routine;}
+function detailHTML(f){const t=T(),r=x=>x.toFixed(2),epss=f._epss,av=f._av,exp=f._exp,like=f._likelihood,floor=f._coreInfra?0.85:0,crit=f._crit,cvssN=(f.cvss==null?5:f.cvss)/10,imp=f._impact,raw=like*imp;
+  const links=[[t.d_l_nvd,'https://nvd.nist.gov/vuln/detail/'+f.cve],[t.d_l_cve,'https://www.cve.org/CVERecord?id='+f.cve]];
+  if(f.kev)links.push([t.d_l_kev,'https://www.cisa.gov/known-exploited-vulnerabilities-catalog']);
+  links.push([t.d_l_adv,'https://www.google.com/search?q='+encodeURIComponent(f.cve+' advisory patch fixed version')]);
+  return `<div class="dsigs"><span class="dsig">CVSS ${f.cvss??'—'}</span><span class="dsig">EPSS ${(epss*100).toFixed(0)}%</span><span class="dsig">${f.kev?t.d_onkev:t.d_notkev}</span><span class="dsig">AV:${f.av}</span><span class="dsig">${f.zone}</span><span class="dsig">${f.criticality}</span><span class="dsig">${f.type}</span></div>
+    <div class="dformula">${t.d_like} = EPSS ${r(epss)} × attack-vector ${r(av)} × ${t.fx_exposure} ${r(exp)} = <b>${r(like)}</b><br>${t.d_imp} = max(${t.fx_criticality} ${r(crit)}, core-infra ${r(floor)}) × CVSS ${r(cvssN)} (${f.cvss==null?'—':f.cvss}/10) = <b>${r(imp)}</b><br>${t.d_score} = ${r(like)} × ${r(imp)} = ${r(raw)}${f.kev?` → <span style="color:var(--kev)">${t.d_kevover} → ${r(f._s)}</span>`:` → <b>${r(f._s)}</b>`} &nbsp;⇒&nbsp; <b>${f._tier}</b></div>
+    <div class="dlinks">${links.map(l=>`<a href="${l[1]}" target="_blank" rel="noopener">${l[0]} ↗</a>`).join('')}</div>
+    <div class="dnote">${t.d_note}</div>`;}
+function toggleDetail(i){const f=VIEW[i];if(!f)return;const d=byId('det-'+i);if(!d)return;if(!d.dataset.built){d.innerHTML=detailHTML(f);d.dataset.built='1';}d.style.display=(d.style.display==='block')?'none':'block';}
+function showMore(){SHOWN+=PAGE;renderList();}
+
+function render(){SHOWN=PAGE;renderKPIs();renderChart();renderList();}
+function renderKPIs(){const t=T(),d=DATA,p0=d.filter(f=>f._tier==='P0').length,kev=d.filter(f=>f.kev).length,ex=d.filter(f=>(f.zone==='internet'||f.zone==='dmz')&&(f._tier==='P0'||f._tier==='P1')).length;
+  byId('kpis').innerHTML=`<div class="kpi kt"><div class="bar"></div><div class="v">${d.length}</div><div class="l">${t.kpi_total}</div></div><div class="kpi k0"><div class="bar"></div><div class="v">${p0}</div><div class="l">${t.kpi_p0}</div></div><div class="kpi kk"><div class="bar"></div><div class="v">${kev}</div><div class="l">${t.kpi_kev}</div></div><div class="kpi ke"><div class="bar"></div><div class="v">${ex}</div><div class="l">${t.kpi_exposed}</div></div>`;}
+const TC={P0:'#ff3b53',P1:'#ff9a3c',P2:'#ffd23c',P3:'#3da6ff'};
+function renderChart(){const t=T(),d=filtered(),host=byId('chart');const Wd=440,Hd=330,pad=40,X=v=>pad+Math.min(v,1)*(Wd-pad*1.4),Y=v=>Hd-pad-Math.min(v,1)*(Hd-pad*1.5);
+  const cssW=host.clientWidth||440,k=cssW/Wd,cssH=Hd*k,dpr=window.devicePixelRatio||1;
+  let cv=host.querySelector('canvas');if(!cv){cv=document.createElement('canvas');cv.className='quad';host.innerHTML='';host.appendChild(cv);}
+  cv.width=Math.round(cssW*dpr);cv.height=Math.round(cssH*dpr);cv.style.width=cssW+'px';cv.style.height=cssH+'px';
+  const ctx=cv.getContext('2d');ctx.setTransform(k*dpr,0,0,k*dpr,0,0);ctx.clearRect(0,0,Wd,Hd);
+  const px0=pad,px1=Wd-8,py0=8,py1=Hd-pad,pw=px1-px0,ph=py1-py0,big=d.length>400;
+  if(big){const gx=46,gy=34,cw=pw/gx,ch=ph/gy,bins=new Map();let maxN=1;
+    d.forEach(f=>{const x=X(f._likelihood),y=Y(f._impact);let ix=Math.floor((x-px0)/cw),iy=Math.floor((y-py0)/ch);ix=ix<0?0:ix>=gx?gx-1:ix;iy=iy<0?0:iy>=gy?gy-1:iy;const kk=ix*100+iy;let b=bins.get(kk);if(!b){b={n:0,tt:9,ix,iy};bins.set(kk,b);}b.n++;const tn=+f._tier[1];if(tn<b.tt)b.tt=tn;if(b.n>maxN)maxN=b.n;});
+    const lm=Math.log(1+maxN);bins.forEach(b=>{ctx.globalAlpha=Math.min(0.6,0.1+0.5*Math.log(1+b.n)/lm);ctx.fillStyle=TC['P'+b.tt];ctx.fillRect(px0+b.ix*cw,py0+b.iy*ch,cw+0.6,ch+0.6);});ctx.globalAlpha=1;}
+  ctx.strokeStyle='#222a36';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,py1);ctx.lineTo(px1,py1);ctx.moveTo(pad,py1);ctx.lineTo(pad,py0);ctx.stroke();
+  ctx.strokeStyle=big?'#39434f':'#1a212b';ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(X(0.5),py0);ctx.lineTo(X(0.5),py1);ctx.moveTo(pad,Y(0.5));ctx.lineTo(px1,Y(0.5));ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#5b6675';ctx.font='10px "IBM Plex Mono",monospace';ctx.textBaseline='alphabetic';
+  ctx.textAlign='end';ctx.fillText(t.ax_act,Wd-12,20);
+  ctx.textAlign='center';ctx.fillText(t.ax_like,Wd/2,Hd-10);
+  ctx.save();ctx.translate(13,Hd/2);ctx.rotate(-Math.PI/2);ctx.fillText(t.ax_imp,0,0);ctx.restore();
+  const sorted=d.slice().sort((a,b)=>a._s-b._s),plot=big?sorted.slice(-250):sorted,showLbl=!big&&d.length<=40;
+  plot.forEach(f=>{const x=X(f._likelihood),y=Y(f._impact),rr=f.kev?7:5.5;ctx.beginPath();ctx.arc(x,y,rr,0,6.2832);ctx.globalAlpha=big?1:0.85;ctx.fillStyle=TC[f._tier];ctx.fill();ctx.globalAlpha=1;if(f.kev){ctx.lineWidth=1.4;ctx.strokeStyle='#fff';ctx.stroke();}if(showLbl){ctx.fillStyle='#5b6675';ctx.textAlign='start';ctx.fillText(f.asset.replace(/-0?\d+$/,''),x+9,y+3);}});
+  if(big){ctx.fillStyle='#7a8696';ctx.font='9.5px "IBM Plex Mono",monospace';ctx.textAlign='start';ctx.fillText((t.chart_density||'{m} · density + top 250').replace('{m}',d.length.toLocaleString()),pad+4,py0+11);}}
+function renderList(){const t=T();VIEW=filtered().sort((a,b)=>b._s-a._s);const total=VIEW.length,n=Math.min(SHOWN,total);let h='';
+  for(let i=0;i<n;i++){const f=VIEW[i],[lk,lc]=lvl(f._likelihood,0.4,0.15),[ik,ic]=lvl(f._impact,0.6,0.35);
+    h+=`<div class="finding"><div><div class="rank">#${i+1}</div></div><div class="fmain"><div class="fhead"><span class="tier t-${f._tier}">${f._tier}</span><span class="cve clickable" onclick="toggleDetail(${i})">${f.cve} ▸</span>${f.kev?'<span class="kevtag">KEV</span>':''}<span class="asset">${f.asset} · ${f.zone} · ${f.type}</span></div><div class="verdict">${verdict(f)}</div><div class="meters"><div class="mrow"><span class="mlabel">${t.lab_like}</span><span class="mword ${lc}">${t['word_'+lk]}</span><span class="mfactors">${likeFactors(f)}</span></div><div class="mrow"><span class="mlabel">${t.lab_imp}</span><span class="mword ${ic}">${t['word_'+ik]}</span><span class="mfactors">${impFactors(f)}</span></div></div><div class="detail" id="det-${i}"></div></div><div class="fscore"><div class="slbl">${t.score_lbl}</div><div class="sval" style="color:${TC[f._tier]}">${(f._s*100).toFixed(0)}</div><div class="ssla">${SLA[f._tier]}</div></div></div>`;}
+  if(total===0){byId('list').innerHTML=`<div style="color:var(--txt-faint);font-family:IBM Plex Mono,monospace;padding:20px 0">${t.no_match}</div>`;return;}
+  if(n<total)h+=`<div class="morebar">${t.showing.replace('{n}',n).replace('{m}',total)} <button class="morebtn" onclick="showMore()">${t.show_more}</button></div>`;
+  byId('list').innerHTML=h;}
+function legendHTML(){const t=T();return `<span><i class="sw" style="background:var(--p0)"></i>${t.leg_p0}</span><span><i class="sw" style="background:var(--p1)"></i>${t.leg_p1}</span><span><i class="sw" style="background:var(--p2)"></i>${t.leg_p2}</span><span><i class="sw" style="background:var(--p3)"></i>${t.leg_p3}</span><span><i class="sw" style="background:transparent;border:1.5px solid #fff;border-radius:50%"></i>${t.leg_kev}</span>`;}
+function rebuildZones(){const t=T(),sel=byId('fzone'),cur=sel.value;sel.innerHTML=`<option value="">${t.zone_all}</option><option value="internet">${t.zone_internet}</option><option value="dmz">${t.zone_dmz}</option><option value="internal">${t.zone_internal}</option><option value="management">${t.zone_management}</option>`;sel.value=cur;}
+
+function setLang(l){LANG=l;applyLang();}
+function applyLang(){const t=T();document.documentElement.lang=LANG;
+  document.querySelectorAll('.langsw span').forEach(s=>s.classList.toggle('on',s.dataset.l===LANG));
+  byId('heroEyebrow').textContent=t.hero_eyebrow;byId('heroH1').textContent=t.hero_h1;byId('heroH1b').textContent=t.hero_h1b;byId('heroSub').textContent=t.hero_sub;byId('heroCta1').textContent=t.hero_cta1;byId('heroCta2').textContent=t.hero_cta2;
+  byId('shiftEyebrow').textContent=t.shift_eyebrow;byId('shiftH').textContent=t.shift_h;byId('shiftP').innerHTML=t.shift_p;
+  byId('s1t').textContent=t.s1_t;byId('s1d').textContent=t.s1_d;byId('s2t').textContent=t.s2_t;byId('s2d').textContent=t.s2_d;byId('s3t').textContent=t.s3_t;byId('s3d').textContent=t.s3_d;
+  byId('missionH').textContent=t.mission_h;byId('missionP').innerHTML=t.mission_p;byId('privH').textContent=t.priv_h;byId('privP').innerHTML=t.priv_p;
+  byId('appEyebrow').textContent=t.app_eyebrow;byId('appH').textContent=t.app_h;byId('dataNote').textContent=t.data_note;
+  byId('tbHow').textContent=t.how;byId('btnDemo').textContent=t.demo;byId('btnUpload').textContent=t.upload;byId('btnTemplate').textContent=t.template;
+  byId('rulebar').innerHTML=t.rule;byId('hint').innerHTML=t.hint;byId('footer').innerHTML=t.footer;
+  byId('chartTitle').textContent=t.chart_title;byId('listTitle').textContent=t.list_title;byId('legend').innerHTML=legendHTML();
+  byId('q').placeholder=t.search_ph;rebuildZones();byId('kevchip').textContent=t.kev_only;
+  byId('mSub').textContent=t.m_sub;byId('mH1').textContent=t.m_h1;byId('mP1').innerHTML=t.m_p1;byId('mH2').textContent=t.m_h2;byId('mP2').innerHTML=t.m_p2;byId('mH3').textContent=t.m_h3;byId('mP3').innerHTML=t.m_p3;byId('mGo').textContent=t.m_go;
+  render();}
+
+function openAbout(){byId('about').classList.add('show');}
+function closeAbout(){byId('about').classList.remove('show');}
+function goApp(){byId('app').scrollIntoView({behavior:'smooth'});}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAbout();});
+function buildDotfield(){const f=byId('dotfield');let h='';for(let i=0;i<150;i++){const red=Math.random()<0.045,x=(Math.random()*100).toFixed(1),y=(Math.random()*100).toFixed(1),d=(Math.random()*3).toFixed(1);h+=`<i class="${red?'red':''}" style="left:${x}%;top:${y}%;animation-delay:${d}s"></i>`;}f.innerHTML=h;}
+
+buildDotfield();
+loadDemo();
+applyLang();
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');}),{threshold:.16});
+document.querySelectorAll('.block').forEach(b=>io.observe(b));
+let _rz;window.addEventListener('resize',()=>{clearTimeout(_rz);_rz=setTimeout(()=>{if(DATA.length)renderChart();},150);});
+</script>
+</body>
+</html>
