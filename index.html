@@ -8,7 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  :root{--bg:#0a0c10;--panel:#11151c;--panel-2:#161b24;--line:#222a36;--line-soft:#1a212b;--txt:#dfe6f0;--txt-dim:#8893a4;--txt-faint:#5b6573;--p0:#ff3b53;--p1:#ff9a3c;--p2:#ffd23c;--p3:#3da6ff;--kev:#ff3b53;--accent:#37e0b0;--grid:rgba(120,140,170,0.045);}
+  :root{--bg:#0a0c10;--panel:#11151c;--panel-2:#161b24;--line:#222a36;--line-soft:#1a212b;--txt:#dfe6f0;--txt-dim:#8893a4;--txt-faint:#5b6573;--p0:#ff3b53;--p1:#ff9a3c;--p2:#ffd23c;--p3:#3da6ff;--kev:#ff3b53;--accent:#37e0b0;--grid:rgba(120,140,170,0.045);--chart-axis:#222a36;--chart-grid:#1a212b;--chart-grid-strong:#39434f;--chart-label:#5b6675;--chart-caption:#7a8696;--chart-kev:#ffffff;}
+  html[data-theme="light"]{--bg:#f5f7fa;--panel:#ffffff;--panel-2:#eef1f6;--line:#dde3ec;--line-soft:#e8edf3;--txt:#141a24;--txt-dim:#54607a;--txt-faint:#8b94a6;--p0:#e11d48;--p1:#d9731a;--p2:#b8860b;--p3:#1f78d1;--kev:#e11d48;--accent:#0fae82;--grid:rgba(30,50,90,0.05);--chart-axis:#c3ccd9;--chart-grid:#e7ecf2;--chart-grid-strong:#aab4c3;--chart-label:#8b94a6;--chart-caption:#6b7488;--chart-kev:#141a24;}
   *{box-sizing:border-box;} html,body{margin:0;padding:0;scroll-behavior:smooth;}
   body{background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100vh;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:42px 42px;}
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
@@ -26,10 +27,10 @@
   button.primary{background:var(--accent);color:#04140f;border-color:var(--accent);font-weight:600;}
   button.primary:hover{filter:brightness(1.1);color:#04140f;}
   input[type=file]{display:none;}
-  .langsw{display:inline-flex;border:1px solid var(--line);border-radius:20px;overflow:hidden;font-family:'IBM Plex Mono',monospace;font-size:11px;}
-  .langsw span{padding:8px 12px;cursor:pointer;color:var(--txt-faint);user-select:none;letter-spacing:.06em;}
-  .langsw span.on{background:var(--accent);color:#04140f;font-weight:600;}
-  .langsw span:hover:not(.on){color:var(--txt);}
+  .langsw,.themesw{display:inline-flex;border:1px solid var(--line);border-radius:20px;overflow:hidden;font-family:'IBM Plex Mono',monospace;font-size:11px;}
+  .langsw span,.themesw span{padding:8px 12px;cursor:pointer;color:var(--txt-faint);user-select:none;letter-spacing:.06em;}
+  .langsw span.on,.themesw span.on{background:var(--accent);color:#04140f;font-weight:600;}
+  .langsw span:hover:not(.on),.themesw span:hover:not(.on){color:var(--txt);}
 
   /* HERO */
   .hero{position:relative;min-height:90vh;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;padding:60px 22px;}
@@ -149,7 +150,7 @@
 <body>
 <div class="topbar">
   <div class="tb-brand"><span class="dot"></span><span>First<span class="ac">Few</span></span></div>
-  <div class="tb-right"><button id="tbHow" onclick="openAbout()"></button><div class="langsw"><span data-l="it" onclick="setLang('it')">IT</span><span data-l="en" onclick="setLang('en')">EN</span></div></div>
+  <div class="tb-right"><button id="tbHow" onclick="openAbout()"></button><div class="themesw"><span data-t="light" onclick="setTheme('light')">☀</span><span data-t="dark" onclick="setTheme('dark')">☾</span></div><div class="langsw"><span data-l="it" onclick="setLang('it')">IT</span><span data-l="en" onclick="setLang('en')">EN</span></div></div>
 </div>
 
 <section class="hero">
@@ -374,35 +375,40 @@ function showMore(){SHOWN+=PAGE;renderList();}
 function render(){SHOWN=PAGE;renderKPIs();renderChart();renderList();}
 function renderKPIs(){const t=T(),d=DATA,p0=d.filter(f=>f._tier==='P0').length,kev=d.filter(f=>f.kev).length,ex=d.filter(f=>(f.zone==='internet'||f.zone==='dmz')&&(f._tier==='P0'||f._tier==='P1')).length;
   byId('kpis').innerHTML=`<div class="kpi kt"><div class="bar"></div><div class="v">${d.length}</div><div class="l">${t.kpi_total}</div></div><div class="kpi k0"><div class="bar"></div><div class="v">${p0}</div><div class="l">${t.kpi_p0}</div></div><div class="kpi kk"><div class="bar"></div><div class="v">${kev}</div><div class="l">${t.kpi_kev}</div></div><div class="kpi ke"><div class="bar"></div><div class="v">${ex}</div><div class="l">${t.kpi_exposed}</div></div>`;}
-const TC={P0:'#ff3b53',P1:'#ff9a3c',P2:'#ffd23c',P3:'#3da6ff'};
+function computeTC(){const cs=getComputedStyle(document.documentElement),g=n=>cs.getPropertyValue(n).trim();return{P0:g('--p0')||'#ff3b53',P1:g('--p1')||'#ff9a3c',P2:g('--p2')||'#ffd23c',P3:g('--p3')||'#3da6ff'};}
+let TC=computeTC();
 function renderChart(){const t=T(),d=filtered(),host=byId('chart');const Wd=440,Hd=330,pad=40,X=v=>pad+Math.min(v,1)*(Wd-pad*1.4),Y=v=>Hd-pad-Math.min(v,1)*(Hd-pad*1.5);
   const cssW=host.clientWidth||440,k=cssW/Wd,cssH=Hd*k,dpr=window.devicePixelRatio||1;
   let cv=host.querySelector('canvas');if(!cv){cv=document.createElement('canvas');cv.className='quad';host.innerHTML='';host.appendChild(cv);}
   cv.width=Math.round(cssW*dpr);cv.height=Math.round(cssH*dpr);cv.style.width=cssW+'px';cv.style.height=cssH+'px';
   const ctx=cv.getContext('2d');ctx.setTransform(k*dpr,0,0,k*dpr,0,0);ctx.clearRect(0,0,Wd,Hd);
+  const _cs=getComputedStyle(document.documentElement),CC=n=>_cs.getPropertyValue(n).trim();
   const px0=pad,px1=Wd-8,py0=8,py1=Hd-pad,pw=px1-px0,ph=py1-py0,big=d.length>400;
   if(big){const gx=46,gy=34,cw=pw/gx,ch=ph/gy,bins=new Map();let maxN=1;
     d.forEach(f=>{const x=X(f._likelihood),y=Y(f._impact);let ix=Math.floor((x-px0)/cw),iy=Math.floor((y-py0)/ch);ix=ix<0?0:ix>=gx?gx-1:ix;iy=iy<0?0:iy>=gy?gy-1:iy;const kk=ix*100+iy;let b=bins.get(kk);if(!b){b={n:0,tt:9,ix,iy};bins.set(kk,b);}b.n++;const tn=+f._tier[1];if(tn<b.tt)b.tt=tn;if(b.n>maxN)maxN=b.n;});
     const lm=Math.log(1+maxN);bins.forEach(b=>{ctx.globalAlpha=Math.min(0.6,0.1+0.5*Math.log(1+b.n)/lm);ctx.fillStyle=TC['P'+b.tt];ctx.fillRect(px0+b.ix*cw,py0+b.iy*ch,cw+0.6,ch+0.6);});ctx.globalAlpha=1;}
-  ctx.strokeStyle='#222a36';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,py1);ctx.lineTo(px1,py1);ctx.moveTo(pad,py1);ctx.lineTo(pad,py0);ctx.stroke();
-  ctx.strokeStyle=big?'#39434f':'#1a212b';ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(X(0.5),py0);ctx.lineTo(X(0.5),py1);ctx.moveTo(pad,Y(0.5));ctx.lineTo(px1,Y(0.5));ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle='#5b6675';ctx.font='10px "IBM Plex Mono",monospace';ctx.textBaseline='alphabetic';
+  ctx.strokeStyle=CC('--chart-axis');ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,py1);ctx.lineTo(px1,py1);ctx.moveTo(pad,py1);ctx.lineTo(pad,py0);ctx.stroke();
+  ctx.strokeStyle=big?CC('--chart-grid-strong'):CC('--chart-grid');ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(X(0.5),py0);ctx.lineTo(X(0.5),py1);ctx.moveTo(pad,Y(0.5));ctx.lineTo(px1,Y(0.5));ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle=CC('--chart-label');ctx.font='10px "IBM Plex Mono",monospace';ctx.textBaseline='alphabetic';
   ctx.textAlign='end';ctx.fillText(t.ax_act,Wd-12,20);
   ctx.textAlign='center';ctx.fillText(t.ax_like,Wd/2,Hd-10);
   ctx.save();ctx.translate(13,Hd/2);ctx.rotate(-Math.PI/2);ctx.fillText(t.ax_imp,0,0);ctx.restore();
   const sorted=d.slice().sort((a,b)=>a._s-b._s),plot=big?sorted.slice(-250):sorted,showLbl=!big&&d.length<=40;
-  plot.forEach(f=>{const x=X(f._likelihood),y=Y(f._impact),rr=f.kev?7:5.5;ctx.beginPath();ctx.arc(x,y,rr,0,6.2832);ctx.globalAlpha=big?1:0.85;ctx.fillStyle=TC[f._tier];ctx.fill();ctx.globalAlpha=1;if(f.kev){ctx.lineWidth=1.4;ctx.strokeStyle='#fff';ctx.stroke();}if(showLbl){ctx.fillStyle='#5b6675';ctx.textAlign='start';ctx.fillText(f.asset.replace(/-0?\d+$/,''),x+9,y+3);}});
-  if(big){ctx.fillStyle='#7a8696';ctx.font='9.5px "IBM Plex Mono",monospace';ctx.textAlign='start';ctx.fillText((t.chart_density||'{m} · density + top 250').replace('{m}',d.length.toLocaleString()),pad+4,py0+11);}}
+  plot.forEach(f=>{const x=X(f._likelihood),y=Y(f._impact),rr=f.kev?7:5.5;ctx.beginPath();ctx.arc(x,y,rr,0,6.2832);ctx.globalAlpha=big?1:0.85;ctx.fillStyle=TC[f._tier];ctx.fill();ctx.globalAlpha=1;if(f.kev){ctx.lineWidth=1.4;ctx.strokeStyle=CC('--chart-kev');ctx.stroke();}if(showLbl){ctx.fillStyle=CC('--chart-label');ctx.textAlign='start';ctx.fillText(f.asset.replace(/-0?\d+$/,''),x+9,y+3);}});
+  if(big){ctx.fillStyle=CC('--chart-caption');ctx.font='9.5px "IBM Plex Mono",monospace';ctx.textAlign='start';ctx.fillText((t.chart_density||'{m} · density + top 250').replace('{m}',d.length.toLocaleString()),pad+4,py0+11);}}
 function renderList(){const t=T();VIEW=filtered().sort((a,b)=>b._s-a._s);const total=VIEW.length,n=Math.min(SHOWN,total);let h='';
   for(let i=0;i<n;i++){const f=VIEW[i],[lk,lc]=lvl(f._likelihood,0.4,0.15),[ik,ic]=lvl(f._impact,0.6,0.35);
     h+=`<div class="finding"><div><div class="rank">#${i+1}</div></div><div class="fmain"><div class="fhead"><span class="tier t-${f._tier}">${f._tier}</span><span class="cve clickable" onclick="toggleDetail(${i})">${f.cve} ▸</span>${f.kev?'<span class="kevtag">KEV</span>':''}<span class="asset">${f.asset} · ${f.zone} · ${f.type}</span></div><div class="verdict">${verdict(f)}</div><div class="meters"><div class="mrow"><span class="mlabel">${t.lab_like}</span><span class="mword ${lc}">${t['word_'+lk]}</span><span class="mfactors">${likeFactors(f)}</span></div><div class="mrow"><span class="mlabel">${t.lab_imp}</span><span class="mword ${ic}">${t['word_'+ik]}</span><span class="mfactors">${impFactors(f)}</span></div></div><div class="detail" id="det-${i}"></div></div><div class="fscore"><div class="slbl">${t.score_lbl}</div><div class="sval" style="color:${TC[f._tier]}">${(f._s*100).toFixed(0)}</div><div class="ssla">${SLA[f._tier]}</div></div></div>`;}
   if(total===0){byId('list').innerHTML=`<div style="color:var(--txt-faint);font-family:IBM Plex Mono,monospace;padding:20px 0">${t.no_match}</div>`;return;}
   if(n<total)h+=`<div class="morebar">${t.showing.replace('{n}',n).replace('{m}',total)} <button class="morebtn" onclick="showMore()">${t.show_more}</button></div>`;
   byId('list').innerHTML=h;}
-function legendHTML(){const t=T();return `<span><i class="sw" style="background:var(--p0)"></i>${t.leg_p0}</span><span><i class="sw" style="background:var(--p1)"></i>${t.leg_p1}</span><span><i class="sw" style="background:var(--p2)"></i>${t.leg_p2}</span><span><i class="sw" style="background:var(--p3)"></i>${t.leg_p3}</span><span><i class="sw" style="background:transparent;border:1.5px solid #fff;border-radius:50%"></i>${t.leg_kev}</span>`;}
+function legendHTML(){const t=T();return `<span><i class="sw" style="background:var(--p0)"></i>${t.leg_p0}</span><span><i class="sw" style="background:var(--p1)"></i>${t.leg_p1}</span><span><i class="sw" style="background:var(--p2)"></i>${t.leg_p2}</span><span><i class="sw" style="background:var(--p3)"></i>${t.leg_p3}</span><span><i class="sw" style="background:transparent;border:1.5px solid var(--chart-kev);border-radius:50%"></i>${t.leg_kev}</span>`;}
 function rebuildZones(){const t=T(),sel=byId('fzone'),cur=sel.value;sel.innerHTML=`<option value="">${t.zone_all}</option><option value="internet">${t.zone_internet}</option><option value="dmz">${t.zone_dmz}</option><option value="internal">${t.zone_internal}</option><option value="management">${t.zone_management}</option>`;sel.value=cur;}
 
 function setLang(l){LANG=l;applyLang();}
+let THEME='dark';
+function setTheme(x){THEME=x;applyTheme();}
+function applyTheme(){document.documentElement.dataset.theme=THEME;document.querySelectorAll('.themesw span').forEach(s=>s.classList.toggle('on',s.dataset.t===THEME));TC=computeTC();if(typeof DATA!=='undefined'&&DATA.length)renderChart();}
 function applyLang(){const t=T();document.documentElement.lang=LANG;
   document.querySelectorAll('.langsw span').forEach(s=>s.classList.toggle('on',s.dataset.l===LANG));
   byId('heroEyebrow').textContent=t.hero_eyebrow;byId('heroH1').textContent=t.hero_h1;byId('heroH1b').textContent=t.hero_h1b;byId('heroSub').textContent=t.hero_sub;byId('heroCta1').textContent=t.hero_cta1;byId('heroCta2').textContent=t.hero_cta2;
@@ -426,6 +432,7 @@ function buildDotfield(){const f=byId('dotfield');let h='';for(let i=0;i<150;i++
 buildDotfield();
 loadDemo();
 applyLang();
+applyTheme();
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');}),{threshold:.16});
 document.querySelectorAll('.block').forEach(b=>io.observe(b));
 let _rz;window.addEventListener('resize',()=>{clearTimeout(_rz);_rz=setTimeout(()=>{if(DATA.length)renderChart();},150);});
