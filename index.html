@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  :root{--bg:#0a0c10;--panel:#11151c;--panel-2:#161b24;--line:#222a36;--line-soft:#1a212b;--txt:#dfe6f0;--txt-dim:#8893a4;--txt-faint:#5b6573;--p0:#ff3b53;--p1:#ff9a3c;--p2:#ffd23c;--p3:#3da6ff;--kev:#ff3b53;--accent:#37e0b0;--grid:rgba(120,140,170,0.045);--chart-axis:#222a36;--chart-grid:#1a212b;--chart-grid-strong:#39434f;--chart-label:#5b6675;--chart-caption:#7a8696;--chart-kev:#ffffff;}
-  html[data-theme="light"]{--bg:#f5f7fa;--panel:#ffffff;--panel-2:#eef1f6;--line:#dde3ec;--line-soft:#e8edf3;--txt:#141a24;--txt-dim:#54607a;--txt-faint:#8b94a6;--p0:#e11d48;--p1:#d9731a;--p2:#b8860b;--p3:#1f78d1;--kev:#e11d48;--accent:#0fae82;--grid:rgba(30,50,90,0.05);--chart-axis:#c3ccd9;--chart-grid:#e7ecf2;--chart-grid-strong:#aab4c3;--chart-label:#8b94a6;--chart-caption:#6b7488;--chart-kev:#141a24;}
+  :root{--bg:#0a0c10;--panel:#11151c;--panel-2:#161b24;--line:#222a36;--line-soft:#1a212b;--txt:#dfe6f0;--txt-dim:#8893a4;--txt-faint:#5b6573;--p0:#ff3b53;--p1:#ff9a3c;--p2:#ffd23c;--p3:#3da6ff;--kev:#ff3b53;--accent:#37e0b0;--grid:rgba(120,140,170,0.045);--chart-axis:#222a36;--chart-grid:#1a212b;--chart-grid-strong:#39434f;--chart-label:#5b6675;--chart-caption:#7a8696;--chart-kev:#ffffff;--op:#a78bfa;}
+  html[data-theme="light"]{--bg:#f5f7fa;--panel:#ffffff;--panel-2:#eef1f6;--line:#dde3ec;--line-soft:#e8edf3;--txt:#141a24;--txt-dim:#54607a;--txt-faint:#8b94a6;--p0:#e11d48;--p1:#d9731a;--p2:#b8860b;--p3:#1f78d1;--kev:#e11d48;--accent:#0fae82;--grid:rgba(30,50,90,0.05);--chart-axis:#c3ccd9;--chart-grid:#e7ecf2;--chart-grid-strong:#aab4c3;--chart-label:#8b94a6;--chart-caption:#6b7488;--chart-kev:#141a24;--op:#6d4bff;}
   *{box-sizing:border-box;} html,body{margin:0;padding:0;scroll-behavior:smooth;}
   body{background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100vh;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:42px 42px;}
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
@@ -74,6 +74,7 @@
   .morebar{margin-top:14px;padding:14px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--txt-dim);border-top:1px dashed var(--line);}
   .morebtn{margin-left:10px;background:var(--panel-2);color:var(--txt);border:1px solid var(--line);border-radius:7px;padding:7px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;}
   .morebtn:hover{border-color:var(--accent);color:var(--accent);}
+  .op{color:var(--op);font-weight:700;}
   .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
   .rulebar{margin:22px 0 6px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:14px 18px;font-size:13px;color:var(--txt-dim);line-height:1.6;}
   .rulebar b{color:var(--txt);} .rulebar .k{color:var(--kev);font-weight:600;}
@@ -217,7 +218,7 @@
 const I18N={
  en:{
   hero_eyebrow:`Risk-based vulnerability triage`,
-  hero_h1:`Stop drowning in findings.`, hero_h1b:`Fix the twelve that matter.`,
+  hero_h1:`Stop drowning in findings.`, hero_h1b:`Fix the <span class="ac">First Few</span> that matter.`,
   hero_sub:`AI made finding vulnerabilities almost free — fixing them didn't get any easier. FirstFew ranks your scanner output by real-world risk and tells you, in plain language, what to do first.`,
   hero_cta1:`See it live →`, hero_cta2:`ⓘ How it works`,
   shift_eyebrow:`The shift`, shift_h:`Severity is not priority.`,
@@ -231,7 +232,7 @@ const I18N={
   priv_p:`No server. No account. Nothing logged. FirstFew is fully static and open source — open your DevTools and watch it send nothing, anywhere. <b>Don't trust it. Verify it.</b>`,
   app_eyebrow:`Live · demo data loaded`, app_h:`Try it — click any CVE for the full reasoning.`, data_note:`These sample findings use real CVEs with real values — nothing made up. For each one, the CVSS, KEV status and EPSS are the CVE's actual data (EPSS is the real FIRST score as of 1 Jun 2026 — open a finding's links to check). Only the asset, zone and criticality are an example scenario, since those describe your environment, not the CVE. Upload your own CSV and the live feed fills CVSS, EPSS and KEV in for you, refreshed daily.`, showing:`Showing the top {n} by priority — {m} findings in total.`, show_more:`Show more`, chart_density:`{m} findings · density map + top 250 plotted`,
   how:`ⓘ How it works`, demo:`Reload demo data`, upload:`Upload CSV`, template:`Download template ↓`,
-  rule:`<b>How priority is decided.</b> <span class="k">On CISA KEV (exploited right now) → always P0</span>, wherever it sits. Otherwise: <b>Likelihood</b> (EPSS × can an attacker actually <i>reach</i> it: exposure + attack vector) × <b>Impact</b> (how much the asset matters — core network gear counts as high even when internal, because compromising it breaks your segmentation).`,
+  rule:`<b>How priority is decided.</b> <span class="k">On CISA KEV (exploited right now) → always P0</span>, wherever it sits. Otherwise: <b>Likelihood</b> (EPSS × can an attacker actually <i>reach</i> it: exposure + attack vector) <b class="op">×</b> <b>Impact</b> (how much the asset matters — core network gear counts as high even when internal, because compromising it breaks your segmentation).`,
   hint:`<b>CSV format:</b> <code>cve</code> required · your context: <code>asset</code>, <code>zone</code> (internet/dmz/internal/management), <code>criticality</code> (crown/important/normal/low), <code>type</code> (server/network-core/appliance) · auto-filled from the live feeds: <code>cvss</code>, <code>epss</code>, <code>kev</code>, <code>av</code> (add any of these columns to override). <a onclick="downloadTemplate()">grab the template ↓</a>`,
   footer:`Built by <b style="color:var(--txt)">Silvestro Parisi</b> · open source · data: CISA KEV (CC0), FIRST EPSS, NVD · <a href="https://github.com/silvestroparisi/FirstFew" target="_blank" rel="noopener">github.com/silvestroparisi/FirstFew</a>`,
   kpi_total:`total findings`, kpi_p0:`P0 · act now`, kpi_kev:`on CISA KEV`, kpi_exposed:`exposed &amp; high-risk`,
@@ -266,7 +267,7 @@ const I18N={
  },
  it:{
   hero_eyebrow:`Triage delle vulnerabilità basato sul rischio`,
-  hero_h1:`Smetti di annegare nei finding.`, hero_h1b:`Sistema i pochi che contano.`,
+  hero_h1:`Smetti di annegare nei finding.`, hero_h1b:`Sistema i <span class="ac">primi pochi</span> che contano.`,
   hero_sub:`L'AI ha reso quasi gratis trovare le vulnerabilità — correggerle non è diventato più facile. FirstFew ordina l'output dei tuoi scanner per rischio reale e ti dice, in parole semplici, cosa fare prima.`,
   hero_cta1:`Provalo dal vivo →`, hero_cta2:`ⓘ Come funziona`,
   shift_eyebrow:`Il cambio`, shift_h:`Gravità non è priorità.`,
@@ -280,7 +281,7 @@ const I18N={
   priv_p:`Niente server. Niente account. Niente log. FirstFew è completamente statico e open source — apri i DevTools e guarda: non invia nulla, da nessuna parte. <b>Non fidarti. Verifica.</b>`,
   app_eyebrow:`Live · dati demo caricati`, app_h:`Provalo — clicca una CVE per il ragionamento completo.`, data_note:`Questi finding di esempio usano CVE reali con valori reali — niente di inventato. Per ognuna, CVSS, stato KEV ed EPSS sono i dati effettivi della CVE (l'EPSS è il valore reale FIRST al 1 giu 2026 — apri i link di un finding per verificare). Solo asset, zona e criticità sono uno scenario d'esempio, perché descrivono il tuo ambiente, non la CVE. Quando carichi il tuo CSV, la pipeline live riempie da sola CVSS, EPSS e KEV, aggiornati ogni giorno.`, showing:`Mostro i primi {n} per priorità — {m} finding in totale.`, show_more:`Mostra altri`, chart_density:`{m} finding · mappa di densità + primi 250`,
   how:`ⓘ Come funziona`, demo:`Ricarica dati demo`, upload:`Carica CSV`, template:`Scarica template ↓`,
-  rule:`<b>Come si decide la priorità.</b> <span class="k">In CISA KEV (sfruttata proprio ora) → sempre P0</span>, ovunque si trovi. Altrimenti: <b>Probabilità</b> (EPSS × un attaccante può davvero <i>raggiungerla</i>: esposizione + attack vector) × <b>Impatto</b> (quanto conta l'asset — l'infra di rete core vale alto anche se interna, perché comprometterla rompe la segmentazione).`,
+  rule:`<b>Come si decide la priorità.</b> <span class="k">In CISA KEV (sfruttata proprio ora) → sempre P0</span>, ovunque si trovi. Altrimenti: <b>Probabilità</b> (EPSS × un attaccante può davvero <i>raggiungerla</i>: esposizione + attack vector) <b class="op">×</b> <b>Impatto</b> (quanto conta l'asset — l'infra di rete core vale alto anche se interna, perché comprometterla rompe la segmentazione).`,
   hint:`<b>Formato CSV:</b> <code>cve</code> obbligatoria · il tuo contesto: <code>asset</code>, <code>zone</code> (internet/dmz/internal/management), <code>criticality</code> (crown/important/normal/low), <code>type</code> (server/network-core/appliance) · riempiti dai feed live: <code>cvss</code>, <code>epss</code>, <code>kev</code>, <code>av</code> (aggiungi una di queste colonne per forzarla). <a onclick="downloadTemplate()">scarica il template ↓</a>`,
   footer:`Creato da <b style="color:var(--txt)">Silvestro Parisi</b> · open source · dati: CISA KEV (CC0), FIRST EPSS, NVD · <a href="https://github.com/silvestroparisi/FirstFew" target="_blank" rel="noopener">github.com/silvestroparisi/FirstFew</a>`,
   kpi_total:`finding totali`, kpi_p0:`P0 · agisci ora`, kpi_kev:`in CISA KEV`, kpi_exposed:`esposti e ad alto rischio`,
@@ -431,7 +432,7 @@ function setTheme(x){THEME=x;applyTheme();}
 function applyTheme(){document.documentElement.dataset.theme=THEME;document.querySelectorAll('.themesw span').forEach(s=>s.classList.toggle('on',s.dataset.t===THEME));TC=computeTC();if(typeof DATA!=='undefined'&&DATA.length)renderChart();}
 function applyLang(){const t=T();document.documentElement.lang=LANG;
   document.querySelectorAll('.langsw span').forEach(s=>s.classList.toggle('on',s.dataset.l===LANG));
-  byId('heroEyebrow').textContent=t.hero_eyebrow;byId('heroH1').textContent=t.hero_h1;byId('heroH1b').textContent=t.hero_h1b;byId('heroSub').textContent=t.hero_sub;byId('heroCta1').textContent=t.hero_cta1;byId('heroCta2').textContent=t.hero_cta2;
+  byId('heroEyebrow').textContent=t.hero_eyebrow;byId('heroH1').textContent=t.hero_h1;byId('heroH1b').innerHTML=t.hero_h1b;byId('heroSub').textContent=t.hero_sub;byId('heroCta1').textContent=t.hero_cta1;byId('heroCta2').textContent=t.hero_cta2;
   byId('shiftEyebrow').textContent=t.shift_eyebrow;byId('shiftH').textContent=t.shift_h;byId('shiftP').innerHTML=t.shift_p;
   byId('s1t').textContent=t.s1_t;byId('s1d').textContent=t.s1_d;byId('s2t').textContent=t.s2_t;byId('s2d').textContent=t.s2_d;byId('s3t').textContent=t.s3_t;byId('s3d').textContent=t.s3_d;
   byId('missionH').textContent=t.mission_h;byId('missionP').innerHTML=t.mission_p;byId('privH').textContent=t.priv_h;byId('privP').innerHTML=t.priv_p;
