@@ -248,7 +248,7 @@ const I18N={
   priv_h:`Your data never leaves your browser.`,
   priv_p:`No server. No account. Nothing logged. FirstFew is fully static and open source — open your DevTools and watch it send nothing, anywhere. <b>Don't trust it. Verify it.</b>`,
   app_eyebrow:`Live · demo data loaded`, app_h:`Try it — click any CVE for the full reasoning.`, data_note:`These sample findings use real CVEs with real values — nothing made up. For each one, the CVSS, KEV status and EPSS are the CVE's actual data (EPSS is the real FIRST score as of 1 Jun 2026 — open a finding's links to check). Only the asset, zone and criticality are an example scenario, since those describe your environment, not the CVE. Upload your own CSV and the live feed fills CVSS, EPSS and KEV in for you, refreshed daily.`, showing:`Showing the top {n} by priority — {m} findings in total.`, show_more:`Show more`, chart_density:`{m} findings · density map + top 250 plotted`,
-  how:`ⓘ How it works`, demo:`Reload demo data`, upload:`Upload CSV`, template:`Download template ↓`, exp_all:`Export (CSV + report) ↓`,
+  how:`ⓘ How it works`, demo:`Reload demo data`, upload:`Upload CSV`, template:`Download template ↓`, exp_all:`Export ZIP (CSV + report) ↓`,
   rule:`<b>How priority is decided.</b> <span class="k">On CISA KEV (exploited right now) → always P0</span>, wherever it sits. Otherwise: <b>Likelihood</b> (EPSS × can an attacker actually <i>reach</i> it: exposure + attack vector) <b class="op">×</b> <b>Impact</b> (how much the asset matters — core network gear counts as high even when internal, because compromising it breaks your segmentation).`,
   hint:`<b>CSV format:</b> <code>cve</code> required · your context: <code>asset</code>, <code>zone</code> (internet/dmz/internal/management), <code>criticality</code> (crown/important/normal/low), <code>type</code> (server/network-core/appliance) · auto-filled from the live feeds: <code>cvss</code>, <code>epss</code>, <code>kev</code>, <code>av</code> (add any of these columns to override). <a onclick="downloadTemplate()">grab the template ↓</a>`,
   ho_eyebrow:`NEXT STEP`,
@@ -301,7 +301,7 @@ const I18N={
   priv_h:`I tuoi dati non lasciano mai il browser.`,
   priv_p:`Niente server. Niente account. Niente log. FirstFew è completamente statico e open source — apri i DevTools e guarda: non invia nulla, da nessuna parte. <b>Non fidarti. Verifica.</b>`,
   app_eyebrow:`Live · dati demo caricati`, app_h:`Provalo — clicca una CVE per il ragionamento completo.`, data_note:`Questi finding di esempio usano CVE reali con valori reali — niente di inventato. Per ognuna, CVSS, stato KEV ed EPSS sono i dati effettivi della CVE (l'EPSS è il valore reale FIRST al 1 giu 2026 — apri i link di un finding per verificare). Solo asset, zona e criticità sono uno scenario d'esempio, perché descrivono il tuo ambiente, non la CVE. Quando carichi il tuo CSV, la pipeline live riempie da sola CVSS, EPSS e KEV, aggiornati ogni giorno.`, showing:`Mostro i primi {n} per priorità — {m} finding in totale.`, show_more:`Mostra altri`, chart_density:`{m} finding · mappa di densità + primi 250`,
-  how:`ⓘ Come funziona`, demo:`Ricarica dati demo`, upload:`Carica CSV`, template:`Scarica template ↓`, exp_all:`Esporta (CSV + report) ↓`,
+  how:`ⓘ Come funziona`, demo:`Ricarica dati demo`, upload:`Carica CSV`, template:`Scarica template ↓`, exp_all:`Esporta ZIP (CSV + report) ↓`,
   rule:`<b>Come si decide la priorità.</b> <span class="k">In CISA KEV (sfruttata proprio ora) → sempre P0</span>, ovunque si trovi. Altrimenti: <b>Probabilità</b> (EPSS × un attaccante può davvero <i>raggiungerla</i>: esposizione + attack vector) <b class="op">×</b> <b>Impatto</b> (quanto conta l'asset — l'infra di rete core vale alto anche se interna, perché comprometterla rompe la segmentazione).`,
   hint:`<b>Formato CSV:</b> <code>cve</code> obbligatoria · il tuo contesto: <code>asset</code>, <code>zone</code> (internet/dmz/internal/management), <code>criticality</code> (crown/important/normal/low), <code>type</code> (server/network-core/appliance) · riempiti dai feed live: <code>cvss</code>, <code>epss</code>, <code>kev</code>, <code>av</code> (aggiungi una di queste colonne per forzarla). <a onclick="downloadTemplate()">scarica il template ↓</a>`,
   ho_eyebrow:`PROSSIMO PASSO`,
@@ -368,13 +368,27 @@ function loadDemo(){DATA=DEMO.map(score);kevOnly=false;syncKevChip();render();}
 function dl(name,content,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
 function stamp(){return new Date().toISOString().slice(0,10);}
 function ranked(){return DATA.slice().sort((a,b)=>b._s-a._s);}
-function exportAll(){exportCSV();setTimeout(exportReport,800);}
-function exportCSV(){const d=ranked();if(!d.length)return;
+function crc32(b){let c=~0;for(let i=0;i<b.length;i++){c^=b[i];for(let j=0;j<8;j++)c=(c>>>1)^(0xEDB88320&-(c&1));}return (~c)>>>0;}
+function makeZip(files){const enc=new TextEncoder(),chunks=[],central=[];let off=0;
+  const u16=n=>Uint8Array.of(n&255,(n>>>8)&255),u32=n=>Uint8Array.of(n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255),P=a=>{chunks.push(a);off+=a.length;};
+  files.forEach(f=>{const nm=enc.encode(f.name),d=f.bytes,crc=crc32(d),lo=off;
+    P(u32(0x04034b50));P(u16(20));P(u16(0));P(u16(0));P(u16(0));P(u16(0));P(u32(crc));P(u32(d.length));P(u32(d.length));P(u16(nm.length));P(u16(0));P(nm);P(d);
+    central.push({nm,crc,sz:d.length,lo});});
+  const cdStart=off;
+  central.forEach(c=>{P(u32(0x02014b50));P(u16(20));P(u16(20));P(u16(0));P(u16(0));P(u16(0));P(u16(0));P(u32(c.crc));P(u32(c.sz));P(u32(c.sz));P(u16(c.nm.length));P(u16(0));P(u16(0));P(u16(0));P(u16(0));P(u32(0));P(u32(c.lo));P(c.nm);});
+  const cdSize=off-cdStart;
+  P(u32(0x06054b50));P(u16(0));P(u16(0));P(u16(central.length));P(u16(central.length));P(u32(cdSize));P(u32(cdStart));P(u16(0));
+  let tot=0;chunks.forEach(c=>tot+=c.length);const out=new Uint8Array(tot);let p=0;chunks.forEach(c=>{out.set(c,p);p+=c.length;});return out;}
+function exportAll(){const csv=buildCSV(),rep=buildReport();if(!csv&&!rep)return;const enc=new TextEncoder(),files=[];
+  if(csv)files.push({name:'firstfew-prioritized-'+stamp()+'.csv',bytes:enc.encode(csv)});
+  if(rep)files.push({name:'firstfew-report-'+stamp()+'.html',bytes:enc.encode(rep)});
+  dl('firstfew-export-'+stamp()+'.zip',makeZip(files),'application/zip');}
+function buildCSV(){const d=ranked();if(!d.length)return null;
   const esc=v=>{v=(v==null?'':String(v));return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
   const head=['rank','priority','score','sla','likelihood','impact','cve','asset','type','zone','criticality','cvss','epss','kev','av','verdict'];
   const lines=d.map((f,i)=>[i+1,f._tier,(f._s*100).toFixed(0),SLA[f._tier],f._likelihood.toFixed(3),f._impact.toFixed(3),f.cve,f.asset,f.type,f.zone,f.criticality,(f.cvss==null?'':f.cvss),(f._epss*100).toFixed(1)+'%',f.kev?'yes':'no',f.av,verdict(f).replace(/<[^>]+>/g,'')].map(esc).join(','));
-  dl('firstfew-prioritized-'+stamp()+'.csv','\ufeff'+head.join(',')+'\n'+lines.join('\n'),'text/csv;charset=utf-8');}
-function exportReport(){const t=T(),d=ranked();if(!d.length)return;
+  return '\ufeff'+head.join(',')+'\n'+lines.join('\n');}
+function buildReport(){const t=T(),d=ranked();if(!d.length)return null;
   const c={P0:0,P1:0,P2:0,P3:0};d.forEach(f=>c[f._tier]++);
   const kev=d.filter(f=>f.kev).length,exp=d.filter(f=>f.zone==='internet'||f.zone==='dmz').length;
   const TCR={P0:'#e11d48',P1:'#d9731a',P2:'#b8860b',P3:'#1f78d1'};
@@ -402,7 +416,7 @@ th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#69728a;bo
 <table><thead><tr>${L.cols.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
 <p class="meth"><b>${L.meth}:</b> ${esc(t.rule.replace(/<[^>]+>/g,''))}<br>${L.note}</p>
 </body></html>`;
-  dl('firstfew-report-'+stamp()+'.html',html,'text/html;charset=utf-8');}
+  return html;}
 const FEED={kev:undefined,epss:{},cvss:{}};
 async function getJSON(p){try{const r=await fetch(p,{cache:'no-store'});if(!r.ok)return null;return await r.json();}catch(e){return null;}}
 function yearOf(cve){const m=/^CVE-(\d{4})-/i.exec(cve||'');return m?m[1]:null;}
