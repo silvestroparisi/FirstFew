@@ -426,7 +426,7 @@ async function loadCSV(ev){const f=ev.target.files[0];if(!f)return;const t=T(),n
   if(note)note.textContent=st.any?t.enriched.replace('{n}',st.resolved).replace('{u}',st.unresolved):t.feed_none;}
 function downloadTemplate(){const csv=['cve,asset,type,zone,criticality,cvss,epss,kev,av','CVE-2024-3400,edge-fw-01,appliance,internet,crown,10.0,0.94,true,N','CVE-2023-38545,build-agent-04,server,internal,low,9.8,0.04,false,N','CVE-2025-21001,mobile-fleet-12,endpoint,management,low,6.2,0.01,false,L'].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='firstfew-template.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
 function parseCSV(txt){const L=txt.trim().split(/\r?\n/),h=L[0].split(',').map(x=>x.trim().toLowerCase()),idx=n=>h.indexOf(n),o=[];
-  for(let i=1;i<L.length;i++){const c=L[i].split(',').map(x=>x.trim());if(!c[0]||c[0].startsWith('#'))continue;const g=n=>{const j=idx(n);return j>=0?c[j]:undefined;},num=v=>(v==null||v==='')?null:parseFloat(v);
+  for(let i=1;i<L.length;i++){const c=L[i].split(',').map(x=>x.trim());if(!c[0]||c[0].startsWith('#'))continue;const g=n=>{const j=idx(n);return j>=0?c[j]:undefined;},num=v=>{if(v==null)return null;let s=String(v).trim();if(s===''||/^(n\/?a|-|—|null)$/i.test(s))return null;const pct=s.includes('%');s=s.replace('%','').replace(/\s/g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?null:(pct?n/100:n);};
     o.push({cve:g('cve')||c[0],asset:g('asset')||'—',type:(g('type')||'server'),zone:(g('zone')||'internal').toLowerCase(),criticality:(g('criticality')||'normal').toLowerCase(),cvss:num(g('cvss')),epss:num(g('epss')),kev:/^(1|true|yes|y)$/i.test(g('kev')||''),av:(g('av')||'N').toUpperCase().slice(0,1)});}
   return o;}
 function toggleKev(){kevOnly=!kevOnly;syncKevChip();render();}
@@ -435,7 +435,7 @@ function filtered(){const q=(byId('q').value||'').toLowerCase(),z=byId('fzone').
   return DATA.filter(f=>{if(kevOnly&&!f.kev)return false;if(z&&f.zone!==z)return false;if(q&&!(f.cve.toLowerCase().includes(q)||f.asset.toLowerCase().includes(q)))return false;return true;});}
 const lvl=(v,hi,md)=>v>=hi?['hi','w-hi']:v>=md?['md','w-md']:['lo','w-lo'];
 function likeFactors(f){const t=T(),up=f.zone==='internet'||f.zone==='dmz',expCls=up?'up':((f.zone==='internal'||f.zone==='management')?'down':''),avCls=(f.av==='L'||f.av==='A'||f.av==='P')?'down':'';
-  return `EPSS ${(f._epss*100).toFixed(0)}% · <span class="${expCls}">${t.exp[f.zone]||f.zone}</span> · <span class="${avCls}">${t.av[f.av]||f.av}</span>`;}
+  return `EPSS ${(f._epss*100).toFixed(f._epss>0&&f._epss<0.1?1:0)}% · <span class="${expCls}">${t.exp[f.zone]||f.zone}</span> · <span class="${avCls}">${t.av[f.av]||f.av}</span>`;}
 function impFactors(f){const t=T();let s=`<span class="${f.criticality==='crown'?'up':(f.criticality==='low'?'down':'')}">${t.crit[f.criticality]||f.criticality}</span>`;if(f._coreInfra)s+=` · <span class="up">${t.coreinfra}</span>`;return s;}
 function verdict(f){const t=T();
   if(f.kev)return t.v_kev;
@@ -449,7 +449,7 @@ function detailHTML(f){const t=T(),r=x=>x.toFixed(2),epss=f._epss,av=f._av,exp=f
   const links=[[t.d_l_nvd,'https://nvd.nist.gov/vuln/detail/'+f.cve],[t.d_l_cve,'https://www.cve.org/CVERecord?id='+f.cve]];
   if(f.kev)links.push([t.d_l_kev,'https://www.cisa.gov/known-exploited-vulnerabilities-catalog']);
   links.push([t.d_l_adv,'https://www.google.com/search?q='+encodeURIComponent(f.cve+' advisory patch fixed version')]);
-  return `<div class="dsigs"><span class="dsig">CVSS ${f.cvss??'—'}</span><span class="dsig">EPSS ${(epss*100).toFixed(0)}%</span><span class="dsig">${f.kev?t.d_onkev:t.d_notkev}</span><span class="dsig">AV:${f.av}</span><span class="dsig">${f.zone}</span><span class="dsig">${f.criticality}</span><span class="dsig">${f.type}</span></div>
+  return `<div class="dsigs"><span class="dsig">CVSS ${f.cvss??'—'}</span><span class="dsig">EPSS ${(epss*100).toFixed(epss>0&&epss<0.1?1:0)}%</span><span class="dsig">${f.kev?t.d_onkev:t.d_notkev}</span><span class="dsig">AV:${f.av}</span><span class="dsig">${f.zone}</span><span class="dsig">${f.criticality}</span><span class="dsig">${f.type}</span></div>
     <div class="dformula">${t.d_like} = EPSS ${r(epss)} × attack-vector ${r(av)} × ${t.fx_exposure} ${r(exp)} = <b>${r(like)}</b><br>${t.d_imp} = max(${t.fx_criticality} ${r(crit)}, core-infra ${r(floor)}) × CVSS ${r(cvssN)} (${f.cvss==null?'—':f.cvss}/10) = <b>${r(imp)}</b><br>${t.d_score} = ${r(like)} × ${r(imp)} = ${r(raw)}${f.kev?` → <span style="color:var(--kev)">${t.d_kevover} → ${r(f._s)}</span>`:` → <b>${r(f._s)}</b>`} &nbsp;⇒&nbsp; <b>${f._tier}</b></div>
     <div class="dlinks">${links.map(l=>`<a href="${l[1]}" target="_blank" rel="noopener">${l[0]} ↗</a>`).join('')}</div>
     <div class="dnote">${t.d_note}</div>`;}
