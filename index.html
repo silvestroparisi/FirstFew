@@ -368,7 +368,7 @@ function loadDemo(){DATA=DEMO.map(score);kevOnly=false;syncKevChip();render();}
 function dl(name,content,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
 function stamp(){return new Date().toISOString().slice(0,10);}
 function ranked(){return DATA.slice().sort((a,b)=>b._s-a._s);}
-function exportAll(){exportCSV();exportReport();}
+function exportAll(){exportCSV();setTimeout(exportReport,800);}
 function exportCSV(){const d=ranked();if(!d.length)return;
   const esc=v=>{v=(v==null?'':String(v));return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
   const head=['rank','priority','score','sla','likelihood','impact','cve','asset','type','zone','criticality','cvss','epss','kev','av','verdict'];
@@ -424,7 +424,7 @@ async function loadCSV(ev){const f=ev.target.files[0];if(!f)return;const t=T(),n
   let st={any:false,resolved:0,unresolved:0};try{st=await enrich(rows);}catch(e){}
   DATA=rows.map(score);kevOnly=false;syncKevChip();render();
   if(note)note.textContent=st.any?t.enriched.replace('{n}',st.resolved).replace('{u}',st.unresolved):t.feed_none;}
-function downloadTemplate(){const csv=['cve,asset,type,zone,criticality,cvss,epss,kev,av','CVE-2024-3400,edge-fw-01,appliance,internet,crown,10.0,0.94,true,N','CVE-2023-38545,build-agent-04,server,internal,low,9.8,0.04,false,N','CVE-2025-21001,mobile-fleet-12,endpoint,management,low,6.2,0.01,false,L'].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='firstfew-template.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
+function downloadTemplate(){const csv=['cve,asset,type,zone,criticality','CVE-2024-3400,edge-fw-01,appliance,internet,crown','CVE-2021-44228,app-java-01,server,internet,important','CVE-2016-5195,host-rhel-19,server,internal,important'].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='firstfew-template.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
 function parseCSV(txt){const L=txt.trim().split(/\r?\n/),h=L[0].split(',').map(x=>x.trim().toLowerCase()),idx=n=>h.indexOf(n),o=[];
   for(let i=1;i<L.length;i++){const c=L[i].split(',').map(x=>x.trim());if(!c[0]||c[0].startsWith('#'))continue;const g=n=>{const j=idx(n);return j>=0?c[j]:undefined;},num=v=>{if(v==null)return null;let s=String(v).trim();if(s===''||/^(n\/?a|-|—|null)$/i.test(s))return null;const pct=s.includes('%');s=s.replace('%','').replace(/\s/g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?null:(pct?n/100:n);};
     o.push({cve:g('cve')||c[0],asset:g('asset')||'—',type:(g('type')||'server'),zone:(g('zone')||'internal').toLowerCase(),criticality:(g('criticality')||'normal').toLowerCase(),cvss:num(g('cvss')),epss:num(g('epss')),kev:/^(1|true|yes|y)$/i.test(g('kev')||''),av:(g('av')||'N').toUpperCase().slice(0,1)});}
