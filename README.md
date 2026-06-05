@@ -1,6 +1,6 @@
 # FirstFew
 
-**Stop drowning in findings. Fix the First Few that matter.**
+**Stop drowning in findings. Focus on the First Few that matter.**
 
 A free, open-source, **fully client-side** vulnerability triage tool. Feed it your scanner's findings and it turns the firehose into a short, ranked **P0–P3** to-do list — so you know the handful to fix *today* instead of staring at thousands of CVEs.
 
