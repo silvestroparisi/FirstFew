@@ -7,6 +7,8 @@ A free, open-source, **fully client-side** vulnerability triage tool. Feed it yo
 🔗 **Live:** https://silvestroparisi.github.io/FirstFew/
 
 > **Companion — [FixFew](https://github.com/silvestroparisi/FixFew):** once FirstFew has surfaced the few that matter, FixFew helps you actually close them — it verifies whether each finding is really exploitable on your asset and proposes the least-disruptive fix.
+>
+> **Also in the toolkit — [MaskFew](https://github.com/silvestroparisi/MaskFew):** strip personal data, secrets and identifiers out of a file — locally, in your browser — before you share it with a cloud tool or an AI.
 
 ---
 
