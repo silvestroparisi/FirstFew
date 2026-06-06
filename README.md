@@ -7,8 +7,6 @@ A free, open-source, **fully client-side** vulnerability triage tool. Feed it yo
 🔗 **Live:** https://silvestroparisi.github.io/FirstFew/
 
 > **Companion — [FixFew](https://github.com/silvestroparisi/FixFew):** once FirstFew has surfaced the few that matter, FixFew helps you actually close them — it verifies whether each finding is really exploitable on your asset and proposes the least-disruptive fix.
->
-> **Also in the toolkit — [MaskFew](https://github.com/silvestroparisi/MaskFew):** strip personal data, secrets and identifiers out of a file — locally, in your browser — before you share it with a cloud tool or an AI.
 
 ---
 
@@ -95,6 +93,13 @@ The page fetches only the year-shards present in your upload, resolves everythin
 - **CISA Known Exploited Vulnerabilities (KEV)** — public domain (CC0).
 - **FIRST EPSS** — Exploit Prediction Scoring System.
 - **NVD** — National Vulnerability Database (CVSS).
+
+## The Few toolkit
+
+- **FirstFew** — prioritize the few that matter
+- [**FixFew**](https://github.com/silvestroparisi/FixFew) — verify and remediate
+- [**MaskFew**](https://github.com/silvestroparisi/MaskFew) — anonymize a file before you share it
+- [**AskFew**](https://github.com/silvestroparisi/AskFew) — a private AI that runs in your browser
 
 ## License
 
