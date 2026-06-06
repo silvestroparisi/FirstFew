@@ -40,6 +40,8 @@ It's a transparent heuristic, not a guarantee — every finding in the list show
 
 Everything runs **in your browser**. Your list of CVEs and your asset context are never uploaded anywhere — the risk feeds are static files served from the same site, the scoring happens locally, and the CSV/report exports are generated on your machine. Nothing leaves the page.
 
+Don't trust the claim? You don't have to — it's open source. Open your browser's DevTools → Network and watch: none of your data ever leaves the page.
+
 ## Using it
 
 1. Open the [live site](https://silvestroparisi.github.io/FirstFew/) and hit **Reload demo data** to see it in action, or
