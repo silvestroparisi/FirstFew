@@ -20,7 +20,7 @@
   .tb-brand{font-family:'Space Mono',monospace;font-weight:700;letter-spacing:.02em;font-size:16px;display:flex;align-items:center;gap:9px;}
   .tb-brand .ac,.modal h3 .ac{color:var(--accent);}
   .modal h3{letter-spacing:.02em;}
-  .tb-brand .dot{width:8px;height:8px;border-radius:2px;background:var(--p0);box-shadow:0 0 10px var(--p0);animation:pulse 2.6s infinite;}
+  .tb-brand .dot{width:8px;height:8px;border-radius:2px;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 2.6s infinite;}
   .tb-right{display:flex;gap:10px;align-items:center;}
   button,label.btn{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;background:var(--panel-2);color:var(--txt);border:1px solid var(--line);padding:9px 14px;border-radius:7px;cursor:pointer;transition:.15s;text-transform:uppercase;}
   button:hover,label.btn:hover{border-color:var(--accent);color:var(--accent);}
@@ -154,6 +154,17 @@
   .modal .go{margin-top:10px;}
   .mclose{position:absolute;top:15px;right:17px;background:none;border:none;color:var(--txt-faint);font-size:18px;cursor:pointer;padding:4px 8px;text-transform:none;} .mclose:hover{color:var(--txt);border:none;}
   @media(max-width:900px){.layout{grid-template-columns:1fr;}.kpis{grid-template-columns:repeat(2,1fr);}}
+  .famly{max-width:900px;margin:50px auto 0;padding:8px 22px 4px;}
+  .famly-h{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--txt-faint);margin:0 0 11px;}
+  .famly-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+  @media(max-width:620px){.famly-grid{grid-template-columns:1fr;}}
+  .famcard{display:flex;flex-direction:column;gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px 28px 12px 14px;text-decoration:none;transition:.15s;position:relative;}
+  .famcard::after{content:"→";position:absolute;top:12px;right:13px;color:var(--txt-faint);font-size:12px;transition:.15s;}
+  .famcard:hover{border-color:var(--accent);transform:translateY(-2px);}
+  .famcard:hover::after{color:var(--accent);transform:translateX(2px);}
+  .famname{font-family:'Space Mono',monospace;font-weight:700;font-size:14px;color:var(--txt);}
+  .famname .ac{color:var(--accent);}
+  .famtag{font-size:11.5px;color:var(--txt-dim);line-height:1.4;}
 </style>
 </head>
 <body>
@@ -216,6 +227,14 @@
     </div>
     <a class="cta-fx" id="hoCta" href="https://silvestroparisi.github.io/FixFew/" target="_blank" rel="noopener"></a>
   </div>
+  <div class="famly">
+    <div class="famly-h" id="famlyH"></div>
+    <div class="famly-grid">
+      <a class="famcard" href="https://silvestroparisi.github.io/FixFew/" target="_blank" rel="noopener"><span class="famname">Fix<span class="ac">Few</span></span><span class="famtag" id="famFix"></span></a>
+      <a class="famcard" href="https://silvestroparisi.github.io/MaskFew/" target="_blank" rel="noopener"><span class="famname">Mask<span class="ac">Few</span></span><span class="famtag" id="famMask"></span></a>
+      <a class="famcard" href="https://silvestroparisi.github.io/AskFew/" target="_blank" rel="noopener"><span class="famname">Ask<span class="ac">Few</span></span><span class="famtag" id="famAsk"></span></a>
+    </div>
+  </div>
   <footer id="footer"></footer>
 </section>
 
@@ -255,7 +274,11 @@ const I18N={
   ho_h:`You've got the few that matter. <span class="ac">FixFew</span> helps you close them.`,
   ho_p:`FirstFew's open-source companion: it verifies whether each finding is actually exploitable on your asset, finds the least-disruptive fix, and tags it. Private by default — runs in your browser.`,
   ho_cta:`Open FixFew →`,
-  footer:`<div style="margin-bottom:9px"><b style="color:var(--txt)">The Few toolkit</b> · FirstFew · <a href="https://github.com/silvestroparisi/FixFew" target="_blank" rel="noopener">FixFew</a> · <a href="https://github.com/silvestroparisi/MaskFew" target="_blank" rel="noopener">MaskFew</a> · <a href="https://github.com/silvestroparisi/AskFew" target="_blank" rel="noopener">AskFew</a></div>Built by <b style="color:var(--txt)">Silvestro Parisi</b> · open source · data: CISA KEV (CC0), FIRST EPSS, NVD.`,
+  famlyH:`The rest of the Few toolkit`,
+  famFix:`Fix the few — verified.`,
+  famMask:`Mask the few that expose you.`,
+  famAsk:`A private AI, in your browser.`,
+  footer:`Built by <b style="color:var(--txt)">Silvestro Parisi</b> · open source · data: CISA KEV (CC0), FIRST EPSS, NVD.<div style="margin-top:9px">More from me on <a href="https://github.com/silvestroparisi" target="_blank" rel="noopener">github.com/silvestroparisi</a></div>`,
   kpi_total:`total findings`, kpi_p0:`P0 · act now`, kpi_kev:`on CISA KEV`, kpi_exposed:`exposed &amp; high-risk`,
   chart_title:`Likelihood × Impact`, list_title:`Prioritized findings — why each one ranks where it does`,
   leg_p0:`P0 act now`, leg_p1:`P1`, leg_p2:`P2`, leg_p3:`P3 monitor`, leg_kev:`white ring = on KEV`,
@@ -308,7 +331,11 @@ const I18N={
   ho_h:`Hai i pochi che contano. <span class="ac">FixFew</span> ti aiuta a chiuderli.`,
   ho_p:`Il compagno open source di FirstFew: verifica se ogni finding è davvero sfruttabile sul tuo asset, trova la fix meno invasiva e lo etichetta. Privato di default — gira nel tuo browser.`,
   ho_cta:`Apri FixFew →`,
-  footer:`<div style="margin-bottom:9px"><b style="color:var(--txt)">Il toolkit Few</b> · FirstFew · <a href="https://github.com/silvestroparisi/FixFew" target="_blank" rel="noopener">FixFew</a> · <a href="https://github.com/silvestroparisi/MaskFew" target="_blank" rel="noopener">MaskFew</a> · <a href="https://github.com/silvestroparisi/AskFew" target="_blank" rel="noopener">AskFew</a></div>Creato da <b style="color:var(--txt)">Silvestro Parisi</b> · open source · dati: CISA KEV (CC0), FIRST EPSS, NVD.`,
+  famlyH:`Il resto del toolkit Few`,
+  famFix:`Sistema i pochi — verificati.`,
+  famMask:`Maschera i pochi che ti espongono.`,
+  famAsk:`Un'AI privata, nel browser.`,
+  footer:`Creato da <b style="color:var(--txt)">Silvestro Parisi</b> · open source · dati: CISA KEV (CC0), FIRST EPSS, NVD.<div style="margin-top:9px">Altro da me su <a href="https://github.com/silvestroparisi" target="_blank" rel="noopener">github.com/silvestroparisi</a></div>`,
   kpi_total:`finding totali`, kpi_p0:`P0 · agisci ora`, kpi_kev:`in CISA KEV`, kpi_exposed:`esposti e ad alto rischio`,
   chart_title:`Probabilità × Impatto`, list_title:`Finding prioritizzati — perché ognuno sta dov'è`,
   leg_p0:`P0 agisci ora`, leg_p1:`P1`, leg_p2:`P2`, leg_p3:`P3 monitora`, leg_kev:`anello bianco = in KEV`,
@@ -516,6 +543,7 @@ function applyLang(){const t=T();document.documentElement.lang=LANG;
   byId('appEyebrow').textContent=t.app_eyebrow;byId('appH').textContent=t.app_h;byId('dataNote').textContent=t.data_note;
   byId('tbHow').textContent=t.how;byId('btnDemo').textContent=t.demo;byId('btnUpload').textContent=t.upload;byId('btnTemplate').textContent=t.template;byId('btnExport').textContent=t.exp_all;
   byId('rulebar').innerHTML=t.rule;byId('hint').innerHTML=t.hint;byId('footer').innerHTML=t.footer;
+  byId('famlyH').textContent=t.famlyH; byId('famFix').textContent=t.famFix; byId('famMask').textContent=t.famMask; byId('famAsk').textContent=t.famAsk;
   byId('hoEyebrow').textContent=t.ho_eyebrow;byId('hoH').innerHTML=t.ho_h;byId('hoP').innerHTML=t.ho_p;byId('hoCta').textContent=t.ho_cta;
   byId('chartTitle').textContent=t.chart_title;byId('listTitle').textContent=t.list_title;byId('legend').innerHTML=legendHTML();
   byId('q').placeholder=t.search_ph;rebuildZones();byId('kevchip').textContent=t.kev_only;

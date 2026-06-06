@@ -99,9 +99,9 @@ The page fetches only the year-shards present in your upload, resolves everythin
 ## The Few toolkit
 
 - **FirstFew** — prioritize the few that matter
-- [**FixFew**](https://github.com/silvestroparisi/FixFew) — verify and remediate
-- [**MaskFew**](https://github.com/silvestroparisi/MaskFew) — anonymize a file before you share it
-- [**AskFew**](https://github.com/silvestroparisi/AskFew) — a private AI that runs in your browser
+- [**FixFew**](https://silvestroparisi.github.io/FixFew/) — verify and remediate
+- [**MaskFew**](https://silvestroparisi.github.io/MaskFew/) — anonymize a file before you share it
+- [**AskFew**](https://silvestroparisi.github.io/AskFew/) — a private AI that runs in your browser
 
 ## License
 
