@@ -232,8 +232,11 @@
     <div class="famly-grid">
       <a class="famcard" href="https://silvestroparisi.github.io/FixFew/" target="_blank" rel="noopener"><span class="famname">Fix<span class="ac">Few</span></span><span class="famtag" id="famFix"></span></a>
       <a class="famcard" href="https://silvestroparisi.github.io/MaskFew/" target="_blank" rel="noopener"><span class="famname">Mask<span class="ac">Few</span></span><span class="famtag" id="famMask"></span></a>
-      <a class="famcard" href="https://silvestroparisi.github.io/ScrubFew/" target="_blank" rel="noopener"><span class="famname">Scrub<span class="ac">Few</span></span><span class="famtag" id="famScrub"></span></a>
       <a class="famcard" href="https://silvestroparisi.github.io/AskFew/" target="_blank" rel="noopener"><span class="famname">Ask<span class="ac">Few</span></span><span class="famtag" id="famAsk"></span></a>
+      <a class="famcard" href="https://silvestroparisi.github.io/ScrubFew/" target="_blank" rel="noopener"><span class="famname">Scrub<span class="ac">Few</span></span><span class="famtag" id="famScrub"></span></a>
+      <a class="famcard" href="https://silvestroparisi.github.io/RopaFew/" target="_blank" rel="noopener"><span class="famname">Ropa<span class="ac">Few</span></span><span class="famtag" id="famRopa"></span></a>
+      <a class="famcard" href="https://silvestroparisi.github.io/GapFew/" target="_blank" rel="noopener"><span class="famname">Gap<span class="ac">Few</span></span><span class="famtag" id="famGap"></span></a>
+      <a class="famcard" href="https://silvestroparisi.github.io/CloseFew/" target="_blank" rel="noopener"><span class="famname">Close<span class="ac">Few</span></span><span class="famtag" id="famClose"></span></a>
     </div>
   </div>
   <footer id="footer"></footer>
@@ -286,10 +289,13 @@ const I18N={
   ho_p:`FirstFew's open-source companion: it verifies whether each finding is actually exploitable on your asset, finds the least-disruptive fix, and tags it. Private by default — runs in your browser.`,
   ho_cta:`Open FixFew →`,
   famlyH:`The rest of the Few toolkit`,
-  famFix:`Fix the few — verified.`,
+  famFix:`Fix the few that matter.`,
   famMask:`Mask the few that expose you.`,
   famAsk:`A private AI, in your browser.`,
   famScrub:`Strip the few traces you can't see.`,
+  famRopa:`Your Article 30 register, fast.`,
+  famGap:`Find the few gaps that matter.`,
+  famClose:`Close the few gaps that matter.`,
   footer:`Built by <b style="color:var(--txt)">Silvestro Parisi</b> · open source · data: CISA KEV (CC0), FIRST EPSS, NVD.<div style="margin-top:9px">More from me on <a href="https://github.com/silvestroparisi" target="_blank" rel="noopener">github.com/silvestroparisi</a></div>`,
   kpi_total:`total findings`, kpi_p0:`P0 · act now`, kpi_kev:`on CISA KEV`, kpi_exposed:`exposed &amp; high-risk`,
   chart_title:`Likelihood × Impact`, list_title:`Prioritized findings — why each one ranks where it does`,
@@ -354,10 +360,13 @@ const I18N={
   ho_p:`Il compagno open source di FirstFew: verifica se ogni finding è davvero sfruttabile sul tuo asset, trova la fix meno invasiva e lo etichetta. Privato di default — gira nel tuo browser.`,
   ho_cta:`Apri FixFew →`,
   famlyH:`Il resto del toolkit Few`,
-  famFix:`Sistema i pochi — verificati.`,
+  famFix:`Sistema i pochi che contano.`,
   famMask:`Maschera i pochi che ti espongono.`,
   famAsk:`Un'AI privata, nel browser.`,
   famScrub:`Cancella le poche tracce nascoste.`,
+  famRopa:`Il tuo registro art. 30, in fretta.`,
+  famGap:`Trova le poche lacune che contano.`,
+  famClose:`Chiudi le poche lacune che contano.`,
   footer:`Creato da <b style="color:var(--txt)">Silvestro Parisi</b> · open source · dati: CISA KEV (CC0), FIRST EPSS, NVD.<div style="margin-top:9px">Altro da me su <a href="https://github.com/silvestroparisi" target="_blank" rel="noopener">github.com/silvestroparisi</a></div>`,
   kpi_total:`finding totali`, kpi_p0:`P0 · agisci ora`, kpi_kev:`in CISA KEV`, kpi_exposed:`esposti e ad alto rischio`,
   chart_title:`Probabilità × Impatto`, list_title:`Finding prioritizzati — perché ognuno sta dov'è`,
@@ -566,7 +575,7 @@ function applyLang(){const t=T();document.documentElement.lang=LANG;
   byId('appEyebrow').textContent=t.app_eyebrow;byId('appH').textContent=t.app_h;byId('dataNote').textContent=t.data_note;
   byId('tbHow').textContent=t.how;byId('btnDemo').textContent=t.demo;byId('btnUpload').textContent=t.upload;byId('btnTemplate').textContent=t.template;byId('btnExport').textContent=t.exp_all;
   byId('rulebar').innerHTML=t.rule;byId('hint').innerHTML=t.hint;byId('footer').innerHTML=t.footer;
-  byId('famlyH').textContent=t.famlyH; byId('famFix').textContent=t.famFix; byId('famMask').textContent=t.famMask; byId('famAsk').textContent=t.famAsk; byId('famScrub').textContent=t.famScrub;
+  byId('famlyH').textContent=t.famlyH; byId('famFix').textContent=t.famFix; byId('famMask').textContent=t.famMask; byId('famAsk').textContent=t.famAsk; byId('famScrub').textContent=t.famScrub; byId('famRopa').textContent=t.famRopa; byId('famGap').textContent=t.famGap; byId('famClose').textContent=t.famClose;
   byId('hoEyebrow').textContent=t.ho_eyebrow;byId('hoH').innerHTML=t.ho_h;byId('hoP').innerHTML=t.ho_p;byId('hoCta').textContent=t.ho_cta;
   byId('chartTitle').textContent=t.chart_title;byId('listTitle').textContent=t.list_title;byId('legend').innerHTML=legendHTML();
   byId('q').placeholder=t.search_ph;rebuildZones();byId('kevchip').textContent=t.kev_only;
