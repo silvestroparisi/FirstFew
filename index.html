@@ -196,7 +196,7 @@
     </div>
   </div>
   <div class="block" id="blk2"><div class="mission"><h2 id="missionH"></h2><p class="lead" id="missionP" style="margin-top:12px"></p></div></div>
-  <div class="block" id="blk3"><div class="privacy"><div class="eyebrow" style="color:var(--accent);margin-bottom:10px">PRIVACY</div><h2 id="privH"></h2><p class="lead" id="privP" style="margin-top:12px"></p></div></div>
+  <div class="block" id="blk3"><div class="privacy"><div class="eyebrow" id="pv_eye" style="color:var(--accent);margin-bottom:10px"></div><h2 id="pv_h"></h2><p class="lead" id="pv_p" style="margin-top:12px"></p><div class="signals" style="margin-top:18px"><div class="sigcard"><h3 id="pvs1h"></h3><p id="pvs1p"></p></div><div class="sigcard"><h3 id="pvs2h"></h3><p id="pvs2p"></p></div><div class="sigcard"><h3 id="pvs3h"></h3><p id="pvs3p"></p></div></div><a class="cta-fx" id="pv_cta" href="https://github.com/silvestroparisi/FirstFew" target="_blank" rel="noopener" style="margin-top:18px;display:inline-block"></a></div></div>
 </div>
 
 <section class="app" id="app">
@@ -254,6 +254,16 @@
 <script>
 const I18N={
  en:{
+  pv_eye:`PRIVATE BY DESIGN · OPEN SOURCE`,
+  pv_h:`Your vulnerability data never leaves your device.`,
+  pv_p:`A vulnerability list is a map of exactly where you're exposed — too sensitive to upload to someone else's server. FirstFew has no backend: your CSV is parsed in your browser, nothing is sent anywhere, no account, no tracking.`,
+  pvs1h:`100% in your browser`,
+  pvs1p:`No server, no upload, no tracking. One HTML file that works even offline.`,
+  pvs2h:`Open source — don't trust, verify`,
+  pvs2p:`Don't take my word for it: the whole tool is one readable file. Open the source, or read it on GitHub.`,
+  pvs3h:`Free, for everyone`,
+  pvs3p:`Built so anyone — including small teams with no security budget — gets tools usually reserved for big organisations.`,
+  pv_cta:`Read the source on GitHub →`,
   hero_eyebrow:`Risk-based vulnerability triage`,
   hero_h1:`Stop drowning in findings.`, hero_h1b:`Focus on the <span class="ac">First Few</span> that matter.`,
   hero_sub:`AI made finding vulnerabilities almost free — fixing them didn't get any easier. FirstFew ranks your scanner output by real-world risk and tells you, in plain language, what to do first.`,
@@ -312,6 +322,16 @@ const I18N={
   m_go:`Start triaging →`
  },
  it:{
+  pv_eye:`PRIVATO PER NATURA · OPEN SOURCE`,
+  pv_h:`I tuoi dati sulle vulnerabilità non lasciano mai il tuo dispositivo.`,
+  pv_p:`Un elenco di vulnerabilità è la mappa esatta di dove sei esposto — troppo sensibile per caricarlo sul server di qualcun altro. FirstFew non ha backend: il tuo CSV viene elaborato nel tuo browser, niente viene inviato da nessuna parte, niente account, niente tracciamento.`,
+  pvs1h:`100% nel tuo browser`,
+  pvs1p:`Nessun server, nessun upload, nessun tracciamento. Un file HTML che funziona anche offline.`,
+  pvs2h:`Open source — non fidarti, verifica`,
+  pvs2p:`Non credere sulla parola: tutto lo strumento è un file leggibile. Apri il sorgente, o leggilo su GitHub.`,
+  pvs3h:`Gratis, per tutti`,
+  pvs3p:`Pensato perché chiunque — anche le piccole realtà senza budget per la sicurezza — abbia strumenti di solito riservati alle grandi organizzazioni.`,
+  pv_cta:`Leggi il sorgente su GitHub →`,
   hero_eyebrow:`Triage delle vulnerabilità basato sul rischio`,
   hero_h1:`Smetti di annegare nei finding.`, hero_h1b:`Concentrati sui <span class="ac">primi pochi</span> che contano.`,
   hero_sub:`L'AI ha reso quasi gratis trovare le vulnerabilità — correggerle non è diventato più facile. FirstFew ordina l'output dei tuoi scanner per rischio reale e ti dice, in parole semplici, cosa fare prima.`,
@@ -542,7 +562,7 @@ function applyLang(){const t=T();document.documentElement.lang=LANG;
   byId('heroEyebrow').textContent=t.hero_eyebrow;byId('heroH1').textContent=t.hero_h1;byId('heroH1b').innerHTML=t.hero_h1b;byId('heroSub').textContent=t.hero_sub;byId('heroCta1').textContent=t.hero_cta1;byId('heroCta2').textContent=t.hero_cta2;
   byId('shiftEyebrow').textContent=t.shift_eyebrow;byId('shiftH').textContent=t.shift_h;byId('shiftP').innerHTML=t.shift_p;
   byId('s1t').textContent=t.s1_t;byId('s1d').textContent=t.s1_d;byId('s2t').textContent=t.s2_t;byId('s2d').textContent=t.s2_d;byId('s3t').textContent=t.s3_t;byId('s3d').textContent=t.s3_d;
-  byId('missionH').textContent=t.mission_h;byId('missionP').innerHTML=t.mission_p;byId('privH').textContent=t.priv_h;byId('privP').innerHTML=t.priv_p;
+  byId('missionH').textContent=t.mission_h;byId('missionP').innerHTML=t.mission_p;byId('pv_eye').textContent=t.pv_eye;byId('pv_h').textContent=t.pv_h;byId('pv_p').innerHTML=t.pv_p;byId('pvs1h').textContent=t.pvs1h;byId('pvs1p').textContent=t.pvs1p;byId('pvs2h').textContent=t.pvs2h;byId('pvs2p').textContent=t.pvs2p;byId('pvs3h').textContent=t.pvs3h;byId('pvs3p').textContent=t.pvs3p;byId('pv_cta').textContent=t.pv_cta;
   byId('appEyebrow').textContent=t.app_eyebrow;byId('appH').textContent=t.app_h;byId('dataNote').textContent=t.data_note;
   byId('tbHow').textContent=t.how;byId('btnDemo').textContent=t.demo;byId('btnUpload').textContent=t.upload;byId('btnTemplate').textContent=t.template;byId('btnExport').textContent=t.exp_all;
   byId('rulebar').innerHTML=t.rule;byId('hint').innerHTML=t.hint;byId('footer').innerHTML=t.footer;
